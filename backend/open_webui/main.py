@@ -85,6 +85,7 @@ from open_webui.routers import (
     tools,
     users,
     utils,
+    custom,
     scim,
 )
 
@@ -1233,6 +1234,7 @@ app.include_router(functions.router, prefix="/api/v1/functions", tags=["function
 app.include_router(
     evaluations.router, prefix="/api/v1/evaluations", tags=["evaluations"]
 )
+app.include_router(custom.router, prefix="/api/custom", tags=["custom"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 # SCIM 2.0 API for identity management
