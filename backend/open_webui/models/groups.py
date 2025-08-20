@@ -279,6 +279,41 @@ class GroupTable:
                 log.exception(e)
                 return False
 
+    def sync_groups_by_group_ids(
+        self, user_id: str, group_ids: list[str], sync_mode: str = "replace"
+    ) -> bool:
+        with get_db() as db:
+            try:
+                groups = db.query(Group).filter(Group.id.in_(group_ids)).all()
+
+                if sync_mode == "replace":
+                    existing_groups = self.get_groups_by_member_id(user_id)
+                    for group in existing_groups:
+                        if group.id not in group_ids:
+                            group.user_ids.remove(user_id)
+                            db.query(Group).filter_by(id=group.id).update(
+                                {
+                                    "user_ids": group.user_ids,
+                                    "updated_at": int(time.time()),
+                                }
+                            )
+
+                for group in groups:
+                    if user_id not in group.user_ids:
+                        group.user_ids.append(user_id)
+                        db.query(Group).filter_by(id=group.id).update(
+                            {
+                                "user_ids": group.user_ids,
+                                "updated_at": int(time.time()),
+                            }
+                        )
+
+                db.commit()
+                return True
+            except Exception as e:
+                log.exception(e)
+                return False
+
     def add_users_to_group(
         self, id: str, user_ids: Optional[list[str]] = None
     ) -> Optional[GroupModel]:
