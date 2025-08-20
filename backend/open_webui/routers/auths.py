@@ -20,6 +20,7 @@ from open_webui.models.auths import (
 )
 from open_webui.models.users import Users
 from open_webui.models.groups import Groups
+from open_webui.models.pending_group_grants import PendingGroupGrants
 
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
@@ -62,6 +63,13 @@ router = APIRouter()
 
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
+
+
+def apply_pending_group_grant(user):
+    grant = PendingGroupGrants.get_grant_by_email(user.email)
+    if grant:
+        Groups.sync_groups_by_group_ids(user.id, grant.group_ids, sync_mode=grant.sync_mode)
+        PendingGroupGrants.delete_grant_by_email(grant.email)
 
 ############################
 # GetSessionUser
@@ -501,6 +509,7 @@ async def signin(request: Request, response: Response, form_data: SigninForm):
         user = Auths.authenticate_user(form_data.email.lower(), form_data.password)
 
     if user:
+        apply_pending_group_grant(user)
 
         expires_delta = parse_duration(request.app.state.config.JWT_EXPIRES_IN)
         expires_at = None
