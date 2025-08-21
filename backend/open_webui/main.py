@@ -84,11 +84,12 @@ from open_webui.routers import (
     evaluations,
     tools,
     users,
-    sync_users,
     utils,
     custom,
     scim,
 )
+
+from open_webui.routes.api import sync_users as supabase_sync_users
 
 from open_webui.routers.retrieval import (
     get_embedding_function,
@@ -1222,7 +1223,7 @@ app.include_router(configs.router, prefix="/api/v1/configs", tags=["configs"])
 
 app.include_router(auths.router, prefix="/api/v1/auths", tags=["auths"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(sync_users.router, prefix="/api", tags=["sync-users"])
+app.include_router(supabase_sync_users.router, prefix="/api", tags=["sync-users"])
 
 
 app.include_router(channels.router, prefix="/api/v1/channels", tags=["channels"])
