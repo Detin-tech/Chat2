@@ -4,8 +4,8 @@ from open_webui.models.groups import Groups, GroupForm
 import os
 
 
-class TestSyncUsers(AbstractPostgresTest):
-    BASE_PATH = "/api/sync-users"
+class TestSyncBatch(AbstractPostgresTest):
+    BASE_PATH = "/api/internal/upsert-users"
 
     @classmethod
     def setup_class(cls):
@@ -40,8 +40,12 @@ class TestSyncUsers(AbstractPostgresTest):
             headers={"Authorization": "Bearer testtoken"},
         )
         assert response.status_code == 200
-        data = response.json()["results"][0]
-        assert data["status"] == "created"
+        data = response.json()
+        assert data["created"] == 1
+        assert data["received"] == 1
+        assert data["failed"] == 0
+        detail = data["results"][0]
+        assert detail["status"] == "created"
         user = Users.get_user_by_email("jane@example.com")
         assert user is not None
         group = Groups.get_group_by_name("Student")
