@@ -84,6 +84,7 @@ from open_webui.routers import (
     evaluations,
     tools,
     users,
+    sync_users,
     utils,
     custom,
     scim,
@@ -424,6 +425,7 @@ from open_webui.env import (
     # SCIM
     SCIM_ENABLED,
     SCIM_TOKEN,
+    SYNC_USERS_TOKEN,
     ENABLE_COMPRESSION_MIDDLEWARE,
     ENABLE_WEBSOCKET_SUPPORT,
     BYPASS_MODEL_ACCESS_CONTROL,
@@ -669,6 +671,7 @@ app.state.config.ENABLE_DIRECT_CONNECTIONS = ENABLE_DIRECT_CONNECTIONS
 
 app.state.SCIM_ENABLED = SCIM_ENABLED
 app.state.SCIM_TOKEN = SCIM_TOKEN
+app.state.SYNC_USERS_TOKEN = SYNC_USERS_TOKEN
 
 ########################################
 #
@@ -1219,6 +1222,7 @@ app.include_router(configs.router, prefix="/api/v1/configs", tags=["configs"])
 
 app.include_router(auths.router, prefix="/api/v1/auths", tags=["auths"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+app.include_router(sync_users.router, prefix="/api", tags=["sync-users"])
 
 
 app.include_router(channels.router, prefix="/api/v1/channels", tags=["channels"])

@@ -453,6 +453,12 @@ SCIM_ENABLED = os.environ.get("SCIM_ENABLED", "False").lower() == "true"
 SCIM_TOKEN = os.environ.get("SCIM_TOKEN", "")
 
 ####################################
+# Internal API Token
+####################################
+
+SYNC_USERS_TOKEN = os.environ.get("SYNC_USERS_TOKEN", "")
+
+####################################
 # LICENSE_KEY
 ####################################
 

@@ -149,6 +149,18 @@ class GroupTable:
         except Exception:
             return None
 
+    def get_group_by_name(self, name: str) -> Optional[GroupModel]:
+        try:
+            with get_db() as db:
+                group = (
+                    db.query(Group)
+                    .filter(func.lower(Group.name) == name.lower())
+                    .first()
+                )
+                return GroupModel.model_validate(group) if group else None
+        except Exception:
+            return None
+
     def get_group_user_ids_by_id(self, id: str) -> Optional[str]:
         group = self.get_group_by_id(id)
         if group:
