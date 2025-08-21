@@ -25,8 +25,20 @@ PLAN_GROUP_MAP = {
 @router.post("/sync-users")
 async def sync_users(request: Request):
     # Authorization check
-    auth = request.headers.get("Authorization")
-    if not auth or auth != OWUI_AUTH_TOKEN:
+    auth = (request.headers.get("Authorization") or "").strip()
+    expected = (OWUI_AUTH_TOKEN or "").strip()
+
+    # Handle cases where OWUI_AUTH_TOKEN already includes "Bearer "
+    # and the client also sends "Bearer ..." (avoid double prefix mismatch)
+    if expected.startswith("Bearer ") and auth.startswith("Bearer "):
+        # Compare only the token part
+        auth_token = auth.split(" ", 1)[1].strip()
+        expected_token = expected.split(" ", 1)[1].strip()
+        valid = auth_token == expected_token
+    else:
+        valid = auth == expected
+
+    if not valid:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     # Pull users from Supabase
@@ -84,8 +96,20 @@ async def sync_users(request: Request):
 
 @router.post("/internal/upsert-user")
 async def upsert_user(payload: dict, request: Request):
-    auth = request.headers.get("Authorization")
-    if auth != OWUI_AUTH_TOKEN:
+    auth = (request.headers.get("Authorization") or "").strip()
+    expected = (OWUI_AUTH_TOKEN or "").strip()
+
+    # Handle cases where OWUI_AUTH_TOKEN already includes "Bearer "
+    # and the client also sends "Bearer ..." (avoid double prefix mismatch)
+    if expected.startswith("Bearer ") and auth.startswith("Bearer "):
+        # Compare only the token part
+        auth_token = auth.split(" ", 1)[1].strip()
+        expected_token = expected.split(" ", 1)[1].strip()
+        valid = auth_token == expected_token
+    else:
+        valid = auth == expected
+
+    if not valid:
         raise HTTPException(status_code=401, detail="Invalid token")
 
     email = payload.get("email")
