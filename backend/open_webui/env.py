@@ -243,6 +243,9 @@ if FROM_INIT_PY:
 
     DATA_DIR = Path(os.getenv("DATA_DIR", OPEN_WEBUI_DIR / "data"))
 
+# Ensure the resolved data directory exists so that database files can be created
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+
 STATIC_DIR = Path(os.getenv("STATIC_DIR", OPEN_WEBUI_DIR / "static"))
 
 FONTS_DIR = Path(os.getenv("FONTS_DIR", OPEN_WEBUI_DIR / "static" / "fonts"))
