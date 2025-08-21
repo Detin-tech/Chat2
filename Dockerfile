@@ -165,6 +165,7 @@ COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
 
 # copy backend files
 COPY --chown=$UID:$GID ./backend .
+COPY --chown=$UID:$GID ./supabase_watcher.py /app/supabase_watcher.py
 
 EXPOSE 8080
 
