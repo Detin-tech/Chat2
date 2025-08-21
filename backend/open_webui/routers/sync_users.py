@@ -24,12 +24,8 @@ class SyncUser(BaseModel):
 async def sync_users(
     request: Request, data: Dict[str, Any], authorization: Optional[str] = Header(None)
 ):
-    token = getattr(request.app.state, "SYNC_USERS_TOKEN", None)
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing authorization"
-        )
-    if not token or authorization.split(" ", 1)[1] != token:
+    token = getattr(request.app.state, "OWUI_AUTH_TOKEN", None)
+    if not authorization or authorization != token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
