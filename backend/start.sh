@@ -71,4 +71,10 @@ fi
 
 PYTHON_CMD=$(command -v python3 || command -v python)
 
+# Launch Supabase user sync watcher when all required variables are set
+if [[ -n "$SUPABASE_URL" && -n "$SUPABASE_API_KEY" && -n "$OWUI_AUTH_TOKEN" && -n "$OWUI_INTERNAL_API" ]]; then
+    echo "Starting Supabase user sync watcher..."
+    "$PYTHON_CMD" "$SCRIPT_DIR/../supabase_watcher.py" --loop &
+fi
+
 WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --workers "${UVICORN_WORKERS:-1}"
