@@ -49,22 +49,29 @@ async def sync_users(request: Request):
         plan = user.get("plan", "free").lower()
         group_id = PLAN_GROUP_MAP.get(plan, PLAN_GROUP_MAP["free"])
 
-        existing = Users.get_user_by_email(email)
-        if existing:
-            Groups.sync_groups_by_group_ids(existing.id, [group_id])
-            updated += 1
-        else:
-            password = secrets.token_urlsafe(12)
-            hashed = get_password_hash(password)
-            new_user = Auths.insert_new_auth(
-                email=email,
-                password=hashed,
-                name=email.split("@")[0],
-                role="user",
-            )
-            if new_user:
-                Groups.sync_groups_by_group_ids(new_user.id, [group_id])
+        payload = {
+            "email": email,
+            "group_id": group_id,
+        }
+
+        response = requests.post(
+            "http://localhost:8080/api/internal/upsert-user",
+            headers={"Authorization": OWUI_AUTH_TOKEN},
+            json=payload,
+        )
+
+        if response.status_code == 200:
+            result = response.json()
+            if result["status"] == "created":
                 created += 1
+            elif result["status"] == "updated":
+                updated += 1
+            else:
+                print(f"⚠️ Unknown status for {email}: {result}")
+        else:
+            print(
+                f"❌ Failed to upsert {email}: {response.status_code} {response.text}"
+            )
 
     return {
         "status": "ok",
