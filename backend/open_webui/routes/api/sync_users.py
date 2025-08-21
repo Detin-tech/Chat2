@@ -13,6 +13,7 @@ router = APIRouter()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_API_KEY = os.getenv("SUPABASE_API_KEY")
 OWUI_AUTH_TOKEN = os.getenv("OWUI_AUTH_TOKEN")
+print("🧪 OWUI sees token as:", repr(OWUI_AUTH_TOKEN))
 
 PLAN_GROUP_MAP = {
     "free": "1",
