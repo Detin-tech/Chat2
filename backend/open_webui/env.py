@@ -764,3 +764,13 @@ PIP_PACKAGE_INDEX_OPTIONS = os.getenv("PIP_PACKAGE_INDEX_OPTIONS", "").split()
 ####################################
 
 EXTERNAL_PWA_MANIFEST_URL = os.environ.get("EXTERNAL_PWA_MANIFEST_URL")
+
+####################################
+# Internal API Token (sync-users)
+####################################
+
+# Token used for the /api/sync-users endpoint
+# Prefer OWUI_AUTH_TOKEN but fall back to legacy SYNC_USERS_TOKEN for backwards compatibility
+OWUI_AUTH_TOKEN = os.environ.get(
+    "OWUI_AUTH_TOKEN", os.environ.get("SYNC_USERS_TOKEN", "")
+)
