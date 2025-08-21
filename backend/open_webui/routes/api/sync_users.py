@@ -72,3 +72,35 @@ async def sync_users(request: Request):
         "created": created,
         "updated": updated,
     }
+
+
+@router.post("/internal/upsert-user")
+async def upsert_user(payload: dict, request: Request):
+    auth = request.headers.get("Authorization")
+    if auth != OWUI_AUTH_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    email = payload.get("email")
+    group_id = payload.get("group_id")
+
+    if not email or not group_id:
+        raise HTTPException(status_code=400, detail="Missing fields")
+
+    existing = Users.get_user_by_email(email.lower())
+    if existing:
+        Groups.sync_groups_by_group_ids(existing.id, [str(group_id)])
+        return {"status": "updated", "email": email}
+
+    password = secrets.token_urlsafe(12)
+    hashed = get_password_hash(password)
+    new_user = Auths.insert_new_auth(
+        email=email.lower(),
+        password=hashed,
+        name=email.split("@")[0],
+        role="user",
+    )
+    if new_user:
+        Groups.sync_groups_by_group_ids(new_user.id, [str(group_id)])
+        return {"status": "created", "email": email}
+
+    raise HTTPException(status_code=500, detail="Failed to upsert user")
