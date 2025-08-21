@@ -455,8 +455,11 @@ SCIM_TOKEN = os.environ.get("SCIM_TOKEN", "")
 ####################################
 # Internal API Token
 ####################################
-
-SYNC_USERS_TOKEN = os.environ.get("SYNC_USERS_TOKEN", "")
+# Token used for the /api/sync-users endpoint
+# Prefer OWUI_AUTH_TOKEN but fall back to legacy SYNC_USERS_TOKEN for backwards compatibility
+OWUI_AUTH_TOKEN = os.environ.get(
+    "OWUI_AUTH_TOKEN", os.environ.get("SYNC_USERS_TOKEN", "")
+)
 
 ####################################
 # LICENSE_KEY

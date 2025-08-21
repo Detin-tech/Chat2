@@ -9,7 +9,7 @@ class TestSyncUsers(AbstractPostgresTest):
 
     @classmethod
     def setup_class(cls):
-        os.environ["SYNC_USERS_TOKEN"] = "testtoken"
+        os.environ["OWUI_AUTH_TOKEN"] = "Bearer testtoken"
         super().setup_class()
 
     def setup_method(self):
