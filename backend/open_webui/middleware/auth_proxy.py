@@ -43,15 +43,11 @@ class AuthProxyMiddleware(BaseHTTPMiddleware):
             )
             user = Users.get_user_by_email(email)
 
-        # Establish OWUI session so downstream sees user as logged in
-        # Many OWUI builds use Starlette sessions: request.session["user_id"] = <id>
-        # If session middleware is not available for some reason, we simply continue;
-        # the next request after login will have a session cookie set by OWUI.
-        if user and hasattr(request, "session"):
+        # Establish OWUI session only if SessionMiddleware already attached a session dict
+        if user and isinstance(getattr(request, "scope", None), dict) and "session" in request.scope:
             try:
-                request.session["user_id"] = user.id
+                request.scope["session"]["user_id"] = user.id
             except Exception:
-                # If sessions aren’t available, we just pass through.
                 pass
 
         return await call_next(request)
