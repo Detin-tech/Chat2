@@ -212,6 +212,24 @@ def get_current_user(
     background_tasks: BackgroundTasks,
     auth_token: HTTPAuthorizationCredentials = Depends(bearer_security),
 ):
+    scope = getattr(request, "scope", {}) or {}
+    session_user_id = None
+    if isinstance(scope, dict):
+        sess = scope.get("session")
+        if isinstance(sess, dict):
+            session_user_id = sess.get("user_id")
+    if session_user_id:
+        user = Users.get_user_by_id(session_user_id)
+        if user:
+            current_span = trace.get_current_span()
+            if current_span:
+                current_span.set_attribute("client.user.id", user.id)
+                current_span.set_attribute("client.user.email", user.email)
+                current_span.set_attribute("client.user.role", user.role)
+                current_span.set_attribute("client.auth.type", "session")
+            if background_tasks:
+                background_tasks.add_task(Users.update_user_last_active_by_id, user.id)
+            return user
     token = None
 
     if auth_token is not None:

@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 from typing import Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -11,6 +12,10 @@ from open_webui.models.users import Users
 from open_webui.models.auths import Auths
 from open_webui.utils.auth import get_password_hash
 from open_webui.models.groups import Groups
+from open_webui.env import SRC_LOG_LEVELS
+
+log = logging.getLogger(__name__)
+log.setLevel(SRC_LOG_LEVELS["OAUTH"])
 
 MODE = (os.getenv("AUTH_MODE") or "").lower()  # "supabase" to enable
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "").strip()
@@ -92,7 +97,9 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
         scope = getattr(request, "scope", {}) or {}
         sess = scope.get("session")
         if isinstance(sess, dict) and sess.get("user_id"):
-            return await call_next(request)
+            response = await call_next(request)
+            log.warning(f"Final session state: {request.scope.get('session')}")
+            return response
 
         token = _extract_bearer_token(request)
         if not token:
@@ -109,6 +116,7 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
             "provider": claims.get("app_metadata", {}).get("provider", "email"),
             "role": claims.get("role", "authenticated"),
         }
+        log.warning(f"Injected session: {request.scope.get('session')}")
 
         email = (claims.get("email") or "").strip().lower()
         if not email:
@@ -139,4 +147,6 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
             except Exception:
                 pass
 
-        return await call_next(request)
+        response = await call_next(request)
+        log.warning(f"Final session state: {request.scope.get('session')}")
+        return response
