@@ -46,21 +46,27 @@ def _extract_bearer_token(req: Request) -> Optional[str]:
 
 
 def _verify_supabase_jwt(token: str) -> Optional[dict]:
-    """Verify a Supabase JWT using HS256 secret or JWKS (RS256/ES256)."""
+    """
+    Verify a Supabase JWT using HS256 (secret) or RS256/ES256 (JWKS).
+    We verify 'aud' only if SUPABASE_JWT_AUD is set.
+    """
     options = {"verify_aud": bool(SUPABASE_JWT_AUD)}
+    audience = SUPABASE_JWT_AUD if SUPABASE_JWT_AUD else None
 
+    # HS256 path
     if SUPABASE_JWT_SECRET:
         try:
             return jwt.decode(
                 token,
                 SUPABASE_JWT_SECRET,
                 algorithms=["HS256"],
-                audience=SUPABASE_JWT_AUD if SUPABASE_JWT_AUD else None,
+                audience=audience,
                 options=options,
             )
         except Exception:
             return None
 
+    # JWKS (RS/ES) path
     jwk_client = _get_jwk_client()
     if not jwk_client:
         return None
@@ -70,7 +76,7 @@ def _verify_supabase_jwt(token: str) -> Optional[dict]:
             token,
             signing_key,
             algorithms=["RS256", "ES256"],
-            audience=SUPABASE_JWT_AUD if SUPABASE_JWT_AUD else None,
+            audience=audience,
             options=options,
         )
     except Exception:
