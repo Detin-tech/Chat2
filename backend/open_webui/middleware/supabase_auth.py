@@ -103,7 +103,7 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Inject claims as a mock session so downstream middlewares work
-        scope["session"] = {
+        request.scope["session"] = {
             "user_id": claims.get("sub"),
             "email": claims.get("email"),
             "provider": claims.get("app_metadata", {}).get("provider", "email"),
