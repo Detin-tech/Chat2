@@ -1157,8 +1157,6 @@ if ENABLE_COMPRESSION_MIDDLEWARE:
 app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(AuthProxyMiddleware)
-# Add before SessionMiddleware (declared later) so it runs after session setup
-app.add_middleware(SupabaseAuthMiddleware)
 
 
 @app.middleware("http")
@@ -1820,6 +1818,8 @@ if len(OAUTH_PROVIDERS) > 0:
         same_site=WEBUI_SESSION_COOKIE_SAME_SITE,
         https_only=WEBUI_SESSION_COOKIE_SECURE,
     )
+
+app.add_middleware(SupabaseAuthMiddleware)
 
 
 @app.get("/oauth/{provider}/login")
