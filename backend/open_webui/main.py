@@ -54,6 +54,7 @@ from starlette.datastructures import Headers
 from open_webui.utils import logger
 from open_webui.utils.audit import AuditLevel, AuditLoggingMiddleware
 from open_webui.utils.logger import start_logger
+from open_webui.middleware.auth_proxy import AuthProxyMiddleware
 from open_webui.socket.main import (
     app as socket_app,
     periodic_usage_pool_cleanup,
@@ -1154,6 +1155,7 @@ if ENABLE_COMPRESSION_MIDDLEWARE:
 
 app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(AuthProxyMiddleware)
 
 
 @app.middleware("http")
