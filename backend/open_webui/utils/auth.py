@@ -211,8 +211,9 @@ def get_current_user(
     response: Response,
     background_tasks: BackgroundTasks,
     auth_token: HTTPAuthorizationCredentials = Depends(bearer_security),
-):
+): 
     scope = getattr(request, "scope", {}) or {}
+    log.warning(f"GET_CURRENT_USER sees session: {scope.get('session')}")
     session_user_id = None
     if isinstance(scope, dict):
         sess = scope.get("session")
