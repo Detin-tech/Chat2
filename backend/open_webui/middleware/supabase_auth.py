@@ -97,8 +97,11 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
         scope = getattr(request, "scope", {}) or {}
         sess = scope.get("session")
         if isinstance(sess, dict) and sess.get("user_id"):
+            log.warning(f"Session already exists, skipping injection: {sess}")
             response = await call_next(request)
-            log.warning(f"Final session state: {request.scope.get('session')}")
+            log.warning(
+                f"Final session state (pre-existing): {request.scope.get('session')}"
+            )
             return response
 
         token = _extract_bearer_token(request)
