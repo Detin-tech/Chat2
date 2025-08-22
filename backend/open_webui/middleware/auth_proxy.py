@@ -20,7 +20,7 @@ class AuthProxyMiddleware(BaseHTTPMiddleware):
         # If session already present, no-op
         try:
             # Starlette SessionMiddleware exposes request.session (dict-like)
-            if hasattr(request, "session") and request.session.get("user_id"):
+            if isinstance(getattr(request, "scope", None), dict) and request.scope.get("session") and request.scope["session"].get("user_id"):
                 return await call_next(request)
         except Exception:
             pass
@@ -44,7 +44,7 @@ class AuthProxyMiddleware(BaseHTTPMiddleware):
             user = Users.get_user_by_email(email)
 
         # Establish OWUI session only if SessionMiddleware already attached a session dict
-        if user and isinstance(getattr(request, "scope", None), dict) and "session" in request.scope:
+        if user and isinstance(getattr(request, "scope", None), dict) and request.scope.get("session"):
             try:
                 request.scope["session"]["user_id"] = user.id
             except Exception:
