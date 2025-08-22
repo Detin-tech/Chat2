@@ -102,6 +102,14 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
         if not claims:
             return await call_next(request)
 
+        # Inject claims as a mock session so downstream middlewares work
+        scope["session"] = {
+            "user_id": claims.get("sub"),
+            "email": claims.get("email"),
+            "provider": claims.get("app_metadata", {}).get("provider", "email"),
+            "role": claims.get("role", "authenticated"),
+        }
+
         email = (claims.get("email") or "").strip().lower()
         if not email:
             return await call_next(request)
