@@ -13,6 +13,7 @@ from open_webui.utils.auth import get_password_hash
 from open_webui.models.groups import Groups
 
 MODE = (os.getenv("AUTH_MODE") or "").lower()  # "supabase" to enable
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "").strip()
 SUPABASE_JWKS_URL = os.getenv("SUPABASE_JWKS_URL", "").strip()
 SUPABASE_JWT_AUD = os.getenv("SUPABASE_JWT_AUD", "").strip()  # e.g., "authenticated" or empty to skip
 
@@ -45,20 +46,33 @@ def _extract_bearer_token(req: Request) -> Optional[str]:
 
 
 def _verify_supabase_jwt(token: str) -> Optional[dict]:
+    """Verify a Supabase JWT using HS256 secret or JWKS (RS256/ES256)."""
+    options = {"verify_aud": bool(SUPABASE_JWT_AUD)}
+
+    if SUPABASE_JWT_SECRET:
+        try:
+            return jwt.decode(
+                token,
+                SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                audience=SUPABASE_JWT_AUD if SUPABASE_JWT_AUD else None,
+                options=options,
+            )
+        except Exception:
+            return None
+
     jwk_client = _get_jwk_client()
     if not jwk_client:
         return None
     try:
         signing_key = jwk_client.get_signing_key_from_jwt(token).key
-        options = {"verify_aud": bool(SUPABASE_JWT_AUD)}
-        decoded = jwt.decode(
+        return jwt.decode(
             token,
             signing_key,
             algorithms=["RS256", "ES256"],
             audience=SUPABASE_JWT_AUD if SUPABASE_JWT_AUD else None,
             options=options,
         )
-        return decoded
     except Exception:
         return None
 
