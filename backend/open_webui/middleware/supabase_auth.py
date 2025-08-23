@@ -125,8 +125,10 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
         if not email:
             return await call_next(request)
 
+        log.warning(f"Looking up or creating user for email: {email}")
         user = Users.get_user_by_email(email)
         if not user:
+            log.warning(f"User not found for {email}, creating...")
             tmp_pw_hash = get_password_hash(os.urandom(16).hex())
             _ = Auths.insert_new_auth(
                 email=email,
@@ -134,7 +136,9 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
                 name=email.split("@")[0],
                 role="user",
             )
+            log.warning(f"Re-fetching user for {email} after insert")
             user = Users.get_user_by_email(email)
+            log.warning(f"User lookup after insert: {user}")
 
         if user:
             default_name = os.getenv("OWUI_DEFAULT_GROUP", "").strip()
