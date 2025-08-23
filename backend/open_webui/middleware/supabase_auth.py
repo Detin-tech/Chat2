@@ -112,23 +112,22 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
         if not claims:
             return await call_next(request)
 
-        # Inject claims as a mock session so downstream middlewares work
+        # Inject Supabase session (temporarily use UUID, will overwrite below)
         request.scope["session"] = {
             "user_id": claims.get("sub"),
             "email": claims.get("email"),
             "provider": claims.get("app_metadata", {}).get("provider", "email"),
             "role": claims.get("role", "authenticated"),
         }
-        log.warning(f"Injected session: {request.scope.get('session')}")
 
+        log.warning(
+            f"[BEFORE OVERWRITE] Injected session: {request.scope.get('session')}"
+        )
+
+        # Make sure user exists
         email = (claims.get("email") or "").strip().lower()
-        if not email:
-            return await call_next(request)
-
-        log.warning(f"Looking up or creating user for email: {email}")
         user = Users.get_user_by_email(email)
         if not user:
-            log.warning(f"User not found for {email}, creating...")
             tmp_pw_hash = get_password_hash(os.urandom(16).hex())
             _ = Auths.insert_new_auth(
                 email=email,
@@ -136,27 +135,20 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
                 name=email.split("@")[0],
                 role="user",
             )
-            log.warning(f"Re-fetching user for {email} after insert")
             user = Users.get_user_by_email(email)
-            log.warning(f"User lookup after insert: {user}")
 
+        # ✅ Overwrite with internal DB user ID
         if user:
+            request.scope["session"]["user_id"] = user.id
+            log.warning(
+                f"[AFTER OVERWRITE] Final session: {request.scope.get('session')}"
+            )
+
             default_name = os.getenv("OWUI_DEFAULT_GROUP", "").strip()
             if default_name:
                 g = Groups.get_group_by_name(default_name)
                 if g:
                     Groups.sync_groups_by_group_ids(user.id, [g.id])
-
-        scope = getattr(request, "scope", {}) or {}
-        if "session" in scope and user:
-            try:
-                original_id = scope["session"].get("user_id")
-                scope["session"]["user_id"] = user.id
-                log.warning(
-                    f"Overwrote session user_id: {original_id} -> {user.id}"
-                )
-            except Exception as e:
-                log.warning(f"Could not update session user_id: {e}")
 
         response = await call_next(request)
         log.warning(f"Final session state: {request.scope.get('session')}")
