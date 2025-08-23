@@ -34,6 +34,7 @@ from open_webui.env import (
 )
 from open_webui.internal.db import Base, get_db
 from open_webui.utils.redis import get_redis_connection
+from open_webui.utils.alembic_utils import run_migrations
 
 
 class EndpointFilter(logging.Filter):
@@ -49,24 +50,8 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 ####################################
 
 
-# Function to run the alembic migrations
-def run_migrations():
-    log.info("Running migrations")
-    try:
-        from alembic import command
-        from alembic.config import Config
 
-        alembic_cfg = Config(OPEN_WEBUI_DIR / "alembic.ini")
-
-        # Set the script location dynamically
-        migrations_path = OPEN_WEBUI_DIR / "migrations"
-        alembic_cfg.set_main_option("script_location", str(migrations_path))
-
-        command.upgrade(alembic_cfg, "head")
-    except Exception as e:
-        log.exception(f"Error running migrations: {e}")
-
-
+# Ensure the database schema is up to date
 run_migrations()
 
 

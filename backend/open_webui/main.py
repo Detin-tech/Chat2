@@ -478,11 +478,6 @@ from open_webui.utils.redis import get_sentinels_from_env
 
 from open_webui.constants import ERROR_MESSAGES
 
-from open_webui.config import run_migrations
-
-# Ensure database migrations are applied
-run_migrations()
-
 
 if SAFE_MODE:
     print("SAFE MODE ENABLED")
