@@ -150,9 +150,13 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
         scope = getattr(request, "scope", {}) or {}
         if "session" in scope and user:
             try:
+                original_id = scope["session"].get("user_id")
                 scope["session"]["user_id"] = user.id
-            except Exception:
-                pass
+                log.warning(
+                    f"Overwrote session user_id: {original_id} -> {user.id}"
+                )
+            except Exception as e:
+                log.warning(f"Could not update session user_id: {e}")
 
         response = await call_next(request)
         log.warning(f"Final session state: {request.scope.get('session')}")
