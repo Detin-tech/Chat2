@@ -139,7 +139,13 @@ class SupabaseAuthMiddleware(BaseHTTPMiddleware):
 
         # ✅ Overwrite with internal DB user ID
         if user:
-            request.scope["session"]["user_id"] = user.id
+            log.warning(f"[DB USER] Retrieved user: {user}")
+            request.scope["session"] = {
+                "user_id": user.id,
+                "email": user.email,
+                "provider": "email",
+                "role": user.role or "user",
+            }
             log.warning(
                 f"[AFTER OVERWRITE] Final session: {request.scope.get('session')}"
             )

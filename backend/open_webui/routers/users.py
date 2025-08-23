@@ -42,6 +42,17 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 router = APIRouter()
 
 
+@router.get("/me", response_model=Optional[UserModel])
+async def get_me(request: Request):
+    session = request.scope.get("session")
+    log.warning(f"Session in /me: {session}")
+    if isinstance(session, dict):
+        user_id = session.get("user_id")
+        if user_id:
+            return Users.get_user_by_id(user_id)
+    return None
+
+
 ############################
 # GetActiveUsers
 ############################
