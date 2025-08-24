@@ -1,19 +1,9 @@
 #!/usr/bin/env python3
 """Sync active Supabase billing users to OpenWebUI.
 
-This script performs a one–shot synchronization of ``public.billing_users``
-from Supabase into OpenWebUI.  It can optionally run in a loop when the
-``--loop`` flag is supplied, but the recommended deployment is via a
-systemd timer that executes the script every minute.
-
-Environment variables (loaded via ``.env`` if present):
-    SUPABASE_URL       - Base URL of the Supabase project.
-    SUPABASE_API_KEY   - Service role API key (JWT).
-    OWUI_URL           - Base URL for OpenWebUI.
-    OWUI_AUTH_TOKEN    - Admin API token for OpenWebUI.
-
-Exit codes are non‑zero on any HTTP error so that systemd can alert or
-restart the service.
+Reads `public.billing_users` (status=active), maps `tier`→OWUI group,
+and calls OWUI `/api/internal/upsert-users` with `X-API-KEY`.
+On any HTTP error, exits non-zero so systemd can alert/retry.
 """
 
 from __future__ import annotations
@@ -202,6 +192,6 @@ def main() -> None:
         sync_once()
 
 
-if __name__ == "__main__":  # pragma: no cover - script entry
+if __name__ == "__main__":
     main()
 
