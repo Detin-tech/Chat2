@@ -20,22 +20,23 @@ from __future__ import annotations
 import argparse
 import os
 import time
-from typing import Dict
+from typing import Dict, Optional
 
 import requests
 from dotenv import load_dotenv
 
-PLAN_GROUP_MAP: Dict[str, str] = {"free": "1", "standard": "2", "pro": "3"}
+# Map billing_users.tier -> OWUI group_id
+TIER_GROUP_MAP: Dict[str, str] = {"free": "1", "standard": "2", "pro": "3"}
 
 
 def sync_users() -> None:
     """Fetch users from Supabase and upsert them into OWUI."""
     load_dotenv()
 
-    supabase_url = os.getenv("SUPABASE_URL")
-    supabase_api_key = os.getenv("SUPABASE_API_KEY")
-    owui_auth_token = os.getenv("OWUI_AUTH_TOKEN")
-    owui_internal_api = os.getenv("OWUI_INTERNAL_API")
+    supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
+    supabase_api_key: Optional[str] = os.getenv("SUPABASE_API_KEY")
+    owui_auth_token: Optional[str] = os.getenv("OWUI_AUTH_TOKEN")
+    owui_internal_api: Optional[str] = os.getenv("OWUI_INTERNAL_API")
 
     if not all([supabase_url, supabase_api_key, owui_auth_token, owui_internal_api]):
         print("Missing required environment variables.")
@@ -44,11 +45,21 @@ def sync_users() -> None:
     headers = {
         "apikey": supabase_api_key,
         "Authorization": f"Bearer {supabase_api_key}",
+        "Accept": "application/json",
+        "Accept-Profile": "public",
+        "Prefer": "count=exact",
     }
     try:
+        # Only ACTIVE users; pull email+tier (the column is 'tier', not 'plan')
+        params = {
+            "select": "email,tier,status",
+            "status": "eq.active",
+            "order": "email.asc",
+        }
         response = requests.get(
-            f"{supabase_url}/rest/v1/billing_users?select=email,plan",
+            f"{supabase_url}/rest/v1/billing_users",
             headers=headers,
+            params=params,
             timeout=30,
         )
     except requests.RequestException as exc:
@@ -69,42 +80,40 @@ def sync_users() -> None:
     updated = 0
     for user in users:
         email = user.get("email")
-        plan = user.get("plan", "free")
-        group_id = PLAN_GROUP_MAP.get(plan, PLAN_GROUP_MAP["free"])
-
-        payload = {"email": email, "group_id": group_id}
-        headers = {"Authorization": owui_auth_token}
-        try:
-            resp = requests.post(owui_internal_api, json=payload, headers=headers, timeout=30)
-        except requests.RequestException as exc:
-            print(f"Request error for {email}: {exc}")
+        tier = (user.get("tier") or "free").lower()
+        group_id = TIER_GROUP_MAP.get(tier, TIER_GROUP_MAP["free"])
+        if not email:
             continue
 
-        if resp.status_code == 200:
-            try:
-                data = resp.json()
-            except ValueError:
-                print(f"{email} returned invalid JSON: {resp.text}")
-                continue
-
-            status = data.get("status")
-            if status == "created":
-                created += 1
-                print(f"{email} created")
-            elif status == "updated":
-                updated += 1
-                print(f"{email} updated")
-            else:
-                print(f"{email} unexpected response: {data}")
+        payload = {"email": email, "group_id": group_id}
+        try:
+            r = requests.post(
+                owui_internal_api,
+                headers={
+                    "Authorization": f"Bearer {owui_auth_token}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+                timeout=30,
+            )
+        except requests.RequestException as exc:
+            print(f"OWUI upsert error for {email}: {exc}")
+            continue
+        if r.status_code in (200, 201):
+            created += 1
+        elif r.status_code in (204,):
+            updated += 1
         else:
-            print(f"Failed to upsert {email}: {resp.status_code} {resp.text}")
+            print(f"OWUI upsert failed for {email}: {r.status_code} {r.text}")
 
-    print(f"Totals - created: {created}, updated: {updated}")
+    print(f"sync complete: created={created} updated={updated}")
 
 
-def main(loop: bool = False) -> None:
-    """Run the sync once or in a continuous minute loop."""
-    if loop:
+def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--loop", action="store_true", help="Run every 60s")
+    args = parser.parse_args()
+    if args.loop:
         while True:
             sync_users()
             time.sleep(60)
@@ -113,11 +122,4 @@ def main(loop: bool = False) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Supabase watcher for OWUI")
-    parser.add_argument(
-        "--loop",
-        action="store_true",
-        help="Run continuously every minute instead of once",
-    )
-    args = parser.parse_args()
-    main(loop=args.loop)
+    main()
