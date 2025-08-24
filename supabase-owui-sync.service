@@ -1,0 +1,14 @@
+[Unit]
+Description=Sync Supabase billing users to OpenWebUI
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Secrets stored in this file (0600): SUPABASE_URL, SUPABASE_API_KEY,
+# OWUI_URL, OWUI_AUTH_TOKEN
+EnvironmentFile=/etc/openwebui/sync.env
+ExecStart=/usr/bin/env python3 /opt/openwebui/supabase_watcher.py
+
+[Install]
+WantedBy=multi-user.target
+

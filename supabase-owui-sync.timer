@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Supabase to OpenWebUI sync every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=60s
+AccuracySec=1s
+Unit=supabase-owui-sync.service
+
+[Install]
+WantedBy=timers.target
+
