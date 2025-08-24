@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Supabase user sync watcher for OpenWebUI.
+"""Supabase user sync watcher for Prosper Chat.
 
 This script fetches all users from the Supabase REST API and upserts
-those users into OpenWebUI via its internal API. It can be run once
+those users into Prosper Chat via its internal API. It can be run once
 (e.g. from cron) or in a continuous loop every minute by supplying the
 ``--loop`` flag.
 
