@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Supabase user sync watcher for Prosper Chat.
+"""Supabase billing user sync watcher for Open WebUI.
 
-This script fetches all users from the Supabase REST API and upserts
-those users into Prosper Chat via its internal API. It can be run once
-(e.g. from cron) or in a continuous loop every minute by supplying the
-``--loop`` flag.
+This script fetches all billing users from the Supabase ``billing_users``
+table and upserts those users into Open WebUI via its internal API. It
+can be run once (e.g. from cron) or in a continuous loop every minute by
+supplying the ``--loop`` flag.
 
 Environment variables loaded from a `.env` file:
     SUPABASE_URL        - Base URL of your Supabase project.
@@ -47,7 +47,7 @@ def sync_users() -> None:
     }
     try:
         response = requests.get(
-            f"{supabase_url}/rest/v1/users?select=email,plan",
+            f"{supabase_url}/rest/v1/billing_users?select=email,plan",
             headers=headers,
             timeout=30,
         )
