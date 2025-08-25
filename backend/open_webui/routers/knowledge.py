@@ -331,7 +331,15 @@ class KnowledgeFileIdForm(BaseModel):
     file_id: str
 
 
-@router.post("/{id}/file/add", response_model=Optional[KnowledgeFilesResponse])
+class KnowledgeFileTaskResponse(BaseModel):
+    status: bool
+    task_id: str
+
+
+@router.post(
+    "/{id}/file/add",
+    response_model=KnowledgeFilesResponse | KnowledgeFileTaskResponse,
+)
 async def add_file_to_knowledge_by_id(
     request: Request,
     id: str,
@@ -362,70 +370,47 @@ async def add_file_to_knowledge_by_id(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
-    if not file.data:
-        try:
-            await process_file(
-                request,
-                ProcessFileForm(file_id=form_data.file_id, collection_name=id),
-                user=user,
-            )
-            file = Files.get_file_by_id(form_data.file_id)
-        except Exception as e:
-            log.debug(e)
+
+    try:
+        result = await process_file(
+            request,
+            ProcessFileForm(file_id=form_data.file_id, collection_name=id),
+            user=user,
+        )
+    except Exception as e:
+        log.debug(e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    data = knowledge.data or {}
+    file_ids = data.get("file_ids", [])
+
+    if form_data.file_id not in file_ids:
+        file_ids.append(form_data.file_id)
+        data["file_ids"] = file_ids
+
+        knowledge = Knowledges.update_knowledge_data_by_id(id=id, data=data)
+
+        if not knowledge:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e),
-            )
-        if not file.data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.FILE_NOT_PROCESSED,
-            )
-    else:
-        try:
-            await process_file(
-                request,
-                ProcessFileForm(file_id=form_data.file_id, collection_name=id),
-                user=user,
-            )
-        except Exception as e:
-            log.debug(e)
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=str(e),
+                detail=ERROR_MESSAGES.DEFAULT("knowledge"),
             )
 
-    if knowledge:
-        data = knowledge.data or {}
-        file_ids = data.get("file_ids", [])
+        if isinstance(result, dict) and result.get("task_id"):
+            return {"status": True, "task_id": result["task_id"]}
 
-        if form_data.file_id not in file_ids:
-            file_ids.append(form_data.file_id)
-            data["file_ids"] = file_ids
-
-            knowledge = Knowledges.update_knowledge_data_by_id(id=id, data=data)
-
-            if knowledge:
-                files = Files.get_file_metadatas_by_ids(file_ids)
-
-                return KnowledgeFilesResponse(
-                    **knowledge.model_dump(),
-                    files=files,
-                )
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=ERROR_MESSAGES.DEFAULT("knowledge"),
-                )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("file_id"),
-            )
+        files = Files.get_file_metadatas_by_ids(file_ids)
+        return KnowledgeFilesResponse(
+            **knowledge.model_dump(),
+            files=files,
+        )
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.NOT_FOUND,
+            detail=ERROR_MESSAGES.DEFAULT("file_id"),
         )
 
 
