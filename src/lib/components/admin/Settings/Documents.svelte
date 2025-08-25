@@ -40,7 +40,7 @@
 
 	let embeddingEngine = '';
 	let embeddingModel = '';
-        let embeddingBatchSize = 32;
+        let embeddingBatchSize = 256;
 	let rerankingModel = '';
 
 	let OpenAIUrl = '';
@@ -222,7 +222,7 @@
 		if (embeddingConfig) {
 			embeddingEngine = embeddingConfig.embedding_engine;
 			embeddingModel = embeddingConfig.embedding_model;
-                        embeddingBatchSize = embeddingConfig.embedding_batch_size ?? 32;
+                        embeddingBatchSize = embeddingConfig.embedding_batch_size ?? 256;
 
 			OpenAIKey = embeddingConfig.openai_config.key;
 			OpenAIUrl = embeddingConfig.openai_config.url;
@@ -238,8 +238,9 @@
 	onMount(async () => {
 		await setEmbeddingConfig();
 
-		const config = await getRAGConfig(localStorage.token);
-		config.ALLOWED_FILE_EXTENSIONS = (config?.ALLOWED_FILE_EXTENSIONS ?? []).join(', ');
+                const config = await getRAGConfig(localStorage.token);
+                config.FILE_MAX_SIZE = config.FILE_MAX_SIZE ?? '';
+                config.ALLOWED_FILE_EXTENSIONS = (config?.ALLOWED_FILE_EXTENSIONS ?? []).join(', ');
 
 		config.DOCLING_PICTURE_DESCRIPTION_LOCAL = JSON.stringify(
 			config.DOCLING_PICTURE_DESCRIPTION_LOCAL ?? {},

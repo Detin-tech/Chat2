@@ -2281,11 +2281,7 @@ RAG_FILE_MAX_COUNT = PersistentConfig(
 RAG_FILE_MAX_SIZE = PersistentConfig(
     "RAG_FILE_MAX_SIZE",
     "rag.file.max_size",
-    (
-        int(os.environ.get("RAG_FILE_MAX_SIZE"))
-        if os.environ.get("RAG_FILE_MAX_SIZE")
-        else None
-    ),
+    None,
 )
 
 RAG_FILE_ASYNC_THRESHOLD = PersistentConfig(
@@ -2358,10 +2354,7 @@ RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE = (
 RAG_EMBEDDING_BATCH_SIZE = PersistentConfig(
     "RAG_EMBEDDING_BATCH_SIZE",
     "rag.embedding_batch_size",
-    int(
-        os.environ.get("RAG_EMBEDDING_BATCH_SIZE")
-        or os.environ.get("RAG_EMBEDDING_OPENAI_BATCH_SIZE", "32")
-    ),
+    int(os.environ.get("RAG_EMBEDDING_BATCH_SIZE", "256")),
 )
 
 RAG_EMBEDDING_QUERY_PREFIX = os.environ.get("RAG_EMBEDDING_QUERY_PREFIX", None)
@@ -2425,7 +2418,7 @@ TIKTOKEN_ENCODING_NAME = PersistentConfig(
 
 
 CHUNK_SIZE = PersistentConfig(
-    "CHUNK_SIZE", "rag.chunk_size", int(os.environ.get("CHUNK_SIZE", "2000"))
+    "CHUNK_SIZE", "rag.chunk_size", int(os.environ.get("CHUNK_SIZE", "5000"))
 )
 CHUNK_OVERLAP = PersistentConfig(
     "CHUNK_OVERLAP",
