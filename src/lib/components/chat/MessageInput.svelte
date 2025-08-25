@@ -578,12 +578,18 @@
 		} else {
 			// If temporary chat is enabled, we just add the file to the list without uploading it.
 
-			const content = await extractContentFromFile(file, pdfjsLib).catch((error) => {
-				toast.error(
-					$i18n.t('Failed to extract content from the file: {{error}}', { error: error })
-				);
-				return null;
-			});
+                        const content = await extractContentFromFile(
+                                file,
+                                pdfjsLib,
+                                (current, total) => {
+                                        console.log(`Processing PDF page ${current} of ${total}`);
+                                }
+                        ).catch((error) => {
+                                toast.error(
+                                        $i18n.t('Failed to extract content from the file: {{error}}', { error: error })
+                                );
+                                return null;
+                        });
 
 			if (content === null) {
 				toast.error($i18n.t('Failed to extract content from the file.'));
