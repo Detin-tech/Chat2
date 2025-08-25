@@ -40,7 +40,7 @@
 
 	let embeddingEngine = '';
 	let embeddingModel = '';
-	let embeddingBatchSize = 1;
+        let embeddingBatchSize = 32;
 	let rerankingModel = '';
 
 	let OpenAIUrl = '';
@@ -222,7 +222,7 @@
 		if (embeddingConfig) {
 			embeddingEngine = embeddingConfig.embedding_engine;
 			embeddingModel = embeddingConfig.embedding_model;
-			embeddingBatchSize = embeddingConfig.embedding_batch_size ?? 1;
+                        embeddingBatchSize = embeddingConfig.embedding_batch_size ?? 32;
 
 			OpenAIKey = embeddingConfig.openai_config.key;
 			OpenAIUrl = embeddingConfig.openai_config.url;

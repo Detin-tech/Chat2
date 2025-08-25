@@ -2360,7 +2360,7 @@ RAG_EMBEDDING_BATCH_SIZE = PersistentConfig(
     "rag.embedding_batch_size",
     int(
         os.environ.get("RAG_EMBEDDING_BATCH_SIZE")
-        or os.environ.get("RAG_EMBEDDING_OPENAI_BATCH_SIZE", "1")
+        or os.environ.get("RAG_EMBEDDING_OPENAI_BATCH_SIZE", "32")
     ),
 )
 
@@ -2425,7 +2425,7 @@ TIKTOKEN_ENCODING_NAME = PersistentConfig(
 
 
 CHUNK_SIZE = PersistentConfig(
-    "CHUNK_SIZE", "rag.chunk_size", int(os.environ.get("CHUNK_SIZE", "1000"))
+    "CHUNK_SIZE", "rag.chunk_size", int(os.environ.get("CHUNK_SIZE", "2000"))
 )
 CHUNK_OVERLAP = PersistentConfig(
     "CHUNK_OVERLAP",
