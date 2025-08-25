@@ -1245,7 +1245,13 @@ def save_docs_to_vector_db(
             raise ValueError(ERROR_MESSAGES.DEFAULT("Invalid text splitter"))
 
     if len(docs) == 0:
-        raise ValueError(ERROR_MESSAGES.EMPTY_CONTENT)
+        # When no content could be extracted from the document, raise an HTTP
+        # error instead of a generic ValueError so that calling routes can
+        # return a useful message to the user.
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.EMPTY_CONTENT,
+        )
 
     texts = [doc.page_content for doc in docs]
     metadatas = [
@@ -1475,6 +1481,17 @@ def _process_file_sync(
             text_content = " ".join([doc.page_content for doc in docs])
 
         log.debug(f"text_content: {text_content}")
+
+        # If no textual content could be extracted from the file, inform the
+        # user with a helpful error instead of proceeding with further
+        # processing. This prevents unhandled exceptions later in the
+        # embedding pipeline.
+        if not text_content.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.EMPTY_CONTENT,
+            )
+
         Files.update_file_data_by_id(
             file.id,
             {"content": text_content},
@@ -1522,6 +1539,11 @@ def _process_file_sync(
                 "content": text_content,
             }
 
+    except HTTPException as e:
+        # Propagate HTTP errors without wrapping them again so that the original
+        # message and status code are preserved.
+        log.exception(e)
+        raise e
     except Exception as e:
         log.exception(e)
         if "No pandoc was found" in str(e):
