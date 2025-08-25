@@ -242,6 +242,17 @@ If you are running Prosper Chat in an offline environment, you can set the `HF_H
 export HF_HUB_OFFLINE=1
 ```
 
+### PDF Image Extraction
+
+`PDF_EXTRACT_IMAGES` controls whether images are pulled from PDF documents during
+ingestion. This can improve OCR accuracy for image-heavy PDFs but slows
+processing and increases memory use. The flag defaults to `false` for better
+performance and can be enabled via the UI or CLI:
+
+```bash
+export PDF_EXTRACT_IMAGES=true
+```
+
 ## What's Next? 🌟
 
 Discover upcoming features on our roadmap in the [Prosper Chat Documentation](https://docs.openwebui.com/roadmap/).
