@@ -50,7 +50,6 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 ####################################
 
 
-
 # Ensure the database schema is up to date
 run_migrations()
 
@@ -2107,44 +2106,43 @@ DATALAB_MARKER_ADDITIONAL_CONFIG = PersistentConfig(
 DATALAB_MARKER_USE_LLM = PersistentConfig(
     "DATALAB_MARKER_USE_LLM",
     "rag.DATALAB_MARKER_USE_LLM",
-    os.environ.get("DATALAB_MARKER_USE_LLM", "false").lower() == "true",
+    False,
 )
 
 DATALAB_MARKER_SKIP_CACHE = PersistentConfig(
     "DATALAB_MARKER_SKIP_CACHE",
     "rag.datalab_marker_skip_cache",
-    os.environ.get("DATALAB_MARKER_SKIP_CACHE", "false").lower() == "true",
+    False,
 )
 
 DATALAB_MARKER_FORCE_OCR = PersistentConfig(
     "DATALAB_MARKER_FORCE_OCR",
     "rag.datalab_marker_force_ocr",
-    os.environ.get("DATALAB_MARKER_FORCE_OCR", "false").lower() == "true",
+    False,
 )
 
 DATALAB_MARKER_PAGINATE = PersistentConfig(
     "DATALAB_MARKER_PAGINATE",
     "rag.datalab_marker_paginate",
-    os.environ.get("DATALAB_MARKER_PAGINATE", "false").lower() == "true",
+    False,
 )
 
 DATALAB_MARKER_STRIP_EXISTING_OCR = PersistentConfig(
     "DATALAB_MARKER_STRIP_EXISTING_OCR",
     "rag.datalab_marker_strip_existing_ocr",
-    os.environ.get("DATALAB_MARKER_STRIP_EXISTING_OCR", "false").lower() == "true",
+    False,
 )
 
 DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION = PersistentConfig(
     "DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION",
     "rag.datalab_marker_disable_image_extraction",
-    os.environ.get("DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION", "false").lower()
-    == "true",
+    False,
 )
 
 DATALAB_MARKER_FORMAT_LINES = PersistentConfig(
     "DATALAB_MARKER_FORMAT_LINES",
     "rag.datalab_marker_format_lines",
-    os.environ.get("DATALAB_MARKER_FORMAT_LINES", "false").lower() == "true",
+    False,
 )
 
 DATALAB_MARKER_OUTPUT_FORMAT = PersistentConfig(
@@ -2180,52 +2178,37 @@ DOCLING_SERVER_URL = PersistentConfig(
 DOCLING_OCR_ENGINE = PersistentConfig(
     "DOCLING_OCR_ENGINE",
     "rag.docling_ocr_engine",
-    os.getenv("DOCLING_OCR_ENGINE", "tesseract"),
+    "",
 )
 
 DOCLING_OCR_LANG = PersistentConfig(
     "DOCLING_OCR_LANG",
     "rag.docling_ocr_lang",
-    os.getenv("DOCLING_OCR_LANG", "eng,fra,deu,spa"),
+    "",
 )
 
 DOCLING_DO_PICTURE_DESCRIPTION = PersistentConfig(
     "DOCLING_DO_PICTURE_DESCRIPTION",
     "rag.docling_do_picture_description",
-    os.getenv("DOCLING_DO_PICTURE_DESCRIPTION", "False").lower() == "true",
+    False,
 )
 
 DOCLING_PICTURE_DESCRIPTION_MODE = PersistentConfig(
     "DOCLING_PICTURE_DESCRIPTION_MODE",
     "rag.docling_picture_description_mode",
-    os.getenv("DOCLING_PICTURE_DESCRIPTION_MODE", ""),
+    "",
 )
-
-
-docling_picture_description_local = os.getenv("DOCLING_PICTURE_DESCRIPTION_LOCAL", "")
-try:
-    docling_picture_description_local = json.loads(docling_picture_description_local)
-except json.JSONDecodeError:
-    docling_picture_description_local = {}
-
 
 DOCLING_PICTURE_DESCRIPTION_LOCAL = PersistentConfig(
     "DOCLING_PICTURE_DESCRIPTION_LOCAL",
     "rag.docling_picture_description_local",
-    docling_picture_description_local,
+    {},
 )
-
-docling_picture_description_api = os.getenv("DOCLING_PICTURE_DESCRIPTION_API", "")
-try:
-    docling_picture_description_api = json.loads(docling_picture_description_api)
-except json.JSONDecodeError:
-    docling_picture_description_api = {}
-
 
 DOCLING_PICTURE_DESCRIPTION_API = PersistentConfig(
     "DOCLING_PICTURE_DESCRIPTION_API",
     "rag.docling_picture_description_api",
-    docling_picture_description_api,
+    {},
 )
 
 
@@ -2353,7 +2336,7 @@ RAG_EMBEDDING_ENGINE = PersistentConfig(
 PDF_EXTRACT_IMAGES = PersistentConfig(
     "PDF_EXTRACT_IMAGES",
     "rag.pdf_extract_images",
-    os.environ.get("PDF_EXTRACT_IMAGES", "false").lower() == "true",
+    False,
 )
 
 RAG_EMBEDDING_MODEL = PersistentConfig(

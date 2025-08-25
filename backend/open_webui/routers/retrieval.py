@@ -1415,27 +1415,27 @@ def _process_file_sync(
                     DATALAB_MARKER_API_KEY=request.app.state.config.DATALAB_MARKER_API_KEY,
                     DATALAB_MARKER_API_BASE_URL=request.app.state.config.DATALAB_MARKER_API_BASE_URL,
                     DATALAB_MARKER_ADDITIONAL_CONFIG=request.app.state.config.DATALAB_MARKER_ADDITIONAL_CONFIG,
-                    DATALAB_MARKER_SKIP_CACHE=request.app.state.config.DATALAB_MARKER_SKIP_CACHE,
-                    DATALAB_MARKER_FORCE_OCR=request.app.state.config.DATALAB_MARKER_FORCE_OCR,
-                    DATALAB_MARKER_PAGINATE=request.app.state.config.DATALAB_MARKER_PAGINATE,
-                    DATALAB_MARKER_STRIP_EXISTING_OCR=request.app.state.config.DATALAB_MARKER_STRIP_EXISTING_OCR,
-                    DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION=request.app.state.config.DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION,
-                    DATALAB_MARKER_FORMAT_LINES=request.app.state.config.DATALAB_MARKER_FORMAT_LINES,
-                    DATALAB_MARKER_USE_LLM=request.app.state.config.DATALAB_MARKER_USE_LLM,
+                    DATALAB_MARKER_SKIP_CACHE=False,
+                    DATALAB_MARKER_FORCE_OCR=False,
+                    DATALAB_MARKER_PAGINATE=False,
+                    DATALAB_MARKER_STRIP_EXISTING_OCR=False,
+                    DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION=False,
+                    DATALAB_MARKER_FORMAT_LINES=False,
+                    DATALAB_MARKER_USE_LLM=False,
                     DATALAB_MARKER_OUTPUT_FORMAT=request.app.state.config.DATALAB_MARKER_OUTPUT_FORMAT,
                     EXTERNAL_DOCUMENT_LOADER_URL=request.app.state.config.EXTERNAL_DOCUMENT_LOADER_URL,
                     EXTERNAL_DOCUMENT_LOADER_API_KEY=request.app.state.config.EXTERNAL_DOCUMENT_LOADER_API_KEY,
                     TIKA_SERVER_URL=request.app.state.config.TIKA_SERVER_URL,
                     DOCLING_SERVER_URL=request.app.state.config.DOCLING_SERVER_URL,
                     DOCLING_PARAMS={
-                        "ocr_engine": request.app.state.config.DOCLING_OCR_ENGINE,
-                        "ocr_lang": request.app.state.config.DOCLING_OCR_LANG,
-                        "do_picture_description": request.app.state.config.DOCLING_DO_PICTURE_DESCRIPTION,
-                        "picture_description_mode": request.app.state.config.DOCLING_PICTURE_DESCRIPTION_MODE,
-                        "picture_description_local": request.app.state.config.DOCLING_PICTURE_DESCRIPTION_LOCAL,
-                        "picture_description_api": request.app.state.config.DOCLING_PICTURE_DESCRIPTION_API,
+                        "ocr_engine": "",
+                        "ocr_lang": "",
+                        "do_picture_description": False,
+                        "picture_description_mode": "",
+                        "picture_description_local": {},
+                        "picture_description_api": {},
                     },
-                    PDF_EXTRACT_IMAGES=request.app.state.config.PDF_EXTRACT_IMAGES,
+                    PDF_EXTRACT_IMAGES=False,
                     DOCUMENT_INTELLIGENCE_ENDPOINT=request.app.state.config.DOCUMENT_INTELLIGENCE_ENDPOINT,
                     DOCUMENT_INTELLIGENCE_KEY=request.app.state.config.DOCUMENT_INTELLIGENCE_KEY,
                     MISTRAL_OCR_API_KEY=request.app.state.config.MISTRAL_OCR_API_KEY,
@@ -1544,6 +1544,7 @@ async def process_file(
     size = (file.meta or {}).get("size", 0)
     threshold = request.app.state.config.FILE_ASYNC_THRESHOLD
     if threshold and size and size > threshold * 1024 * 1024:
+
         async def runner():
             try:
                 await asyncio.to_thread(_process_file_sync, request, form_data, user)
@@ -1557,6 +1558,7 @@ async def process_file(
         return {"status": True, "task_id": task_id}
     else:
         return await asyncio.to_thread(_process_file_sync, request, form_data, user)
+
 
 class ProcessTextForm(BaseModel):
     name: str
