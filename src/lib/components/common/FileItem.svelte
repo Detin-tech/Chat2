@@ -26,7 +26,8 @@
 
 	export let name: string;
 	export let type: string;
-	export let size: number;
+export let size: number;
+export let progress: number | null = null;
 
 	import { deleteFileById } from '$lib/apis/files';
 
@@ -159,3 +160,8 @@
 		</div>
 	{/if}
 </button>
+{#if progress !== null && progress < 100}
+        <div class="w-full bg-gray-200 dark:bg-gray-700 h-1 rounded">
+                <div class="bg-blue-500 h-1 rounded" style="width: {progress}%"></div>
+        </div>
+{/if}

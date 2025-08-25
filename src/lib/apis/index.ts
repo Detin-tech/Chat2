@@ -269,6 +269,38 @@ export const stopTask = async (token: string, id: string) => {
 	return res;
 };
 
+export const getTaskStatus = async (token: string, id: string) => {
+        let error = null;
+
+        const res = await fetch(`${WEBUI_BASE_URL}/api/tasks/status/${id}`, {
+                method: 'GET',
+                headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        ...(token && { authorization: `Bearer ${token}` })
+                }
+        })
+                .then(async (res) => {
+                        if (!res.ok) throw await res.json();
+                        return res.json();
+                })
+                .catch((err) => {
+                        console.error(err);
+                        if ('detail' in err) {
+                                error = err.detail;
+                        } else {
+                                error = err;
+                        }
+                        return null;
+                });
+
+        if (error) {
+                throw error;
+        }
+
+        return res;
+};
+
 export const getTaskIdsByChatId = async (token: string, chat_id: string) => {
 	let error = null;
 

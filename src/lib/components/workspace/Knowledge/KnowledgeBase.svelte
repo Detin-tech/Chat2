@@ -7,32 +7,33 @@
 	import { onMount, getContext, onDestroy, tick } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import {
-		mobile,
-		showSidebar,
-		knowledge as _knowledge,
-		config,
-		user,
-		settings
-	} from '$lib/stores';
+        import { goto } from '$app/navigation';
+        import { page } from '$app/stores';
+        import {
+                mobile,
+                showSidebar,
+                knowledge as _knowledge,
+                config,
+                user,
+                settings
+        } from '$lib/stores';
 
-	import {
-		updateFileDataContentById,
-		uploadFile,
-		deleteFileById,
-		getFileById
-	} from '$lib/apis/files';
-	import {
-		addFileToKnowledgeById,
-		getKnowledgeById,
-		getKnowledgeBases,
-		removeFileFromKnowledgeById,
-		resetKnowledgeById,
-		updateFileFromKnowledgeById,
-		updateKnowledgeById
-	} from '$lib/apis/knowledge';
+        import {
+                updateFileDataContentById,
+                uploadFile,
+                deleteFileById,
+                getFileById
+        } from '$lib/apis/files';
+        import {
+                addFileToKnowledgeById,
+                getKnowledgeById,
+                getKnowledgeBases,
+                removeFileFromKnowledgeById,
+                resetKnowledgeById,
+                updateFileFromKnowledgeById,
+                updateKnowledgeById
+        } from '$lib/apis/knowledge';
+        import { getTaskStatus } from '$lib/apis';
 	import { blobToFile } from '$lib/utils';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -179,25 +180,59 @@
 				return null;
 			});
 
-			if (uploadedFile) {
-				console.log(uploadedFile);
-				knowledge.files = knowledge.files.map((item) => {
-					if (item.itemId === tempItemId) {
-						item.id = uploadedFile.id;
-					}
+                        if (uploadedFile) {
+                                console.log(uploadedFile);
+                                knowledge.files = knowledge.files.map((item) => {
+                                        if (item.itemId === tempItemId) {
+                                                item.id = uploadedFile.id;
+                                                if (uploadedFile.task_id) {
+                                                        item.progress = 0;
+                                                        item.status = 'processing';
+                                                }
+                                        }
 
-					// Remove temporary item id
-					delete item.itemId;
-					return item;
-				});
-				await addFileHandler(uploadedFile.id);
-			} else {
-				toast.error($i18n.t('Failed to upload file.'));
-			}
-		} catch (e) {
-			toast.error(`${e}`);
-		}
-	};
+                                        // Remove temporary item id
+                                        delete item.itemId;
+                                        return item;
+                                });
+
+                                if (uploadedFile.task_id) {
+                                        const interval = setInterval(async () => {
+                                                const info = await getTaskStatus(localStorage.token, uploadedFile.task_id).catch(() => null);
+                                                if (info) {
+                                                        knowledge.files = knowledge.files.map((f) => {
+                                                                if (f.id === uploadedFile.id) {
+                                                                        f.progress = info.progress;
+                                                                }
+                                                                return f;
+                                                        });
+
+                                                        if (info.status === 'completed') {
+                                                                clearInterval(interval);
+                                                                knowledge.files = knowledge.files.map((f) => {
+                                                                        if (f.id === uploadedFile.id) {
+                                                                                delete f.progress;
+                                                                                f.status = '';
+                                                                        }
+                                                                        return f;
+                                                                });
+                                                                await addFileHandler(uploadedFile.id);
+                                                        } else if (info.status === 'failed') {
+                                                                clearInterval(interval);
+                                                                toast.error($i18n.t('Failed to process file.'));
+                                                        }
+                                                }
+                                        }, 1000);
+                                } else {
+                                        await addFileHandler(uploadedFile.id);
+                                }
+                        } else {
+                                toast.error($i18n.t('Failed to upload file.'));
+                        }
+                } catch (e) {
+                        toast.error(`${e}`);
+                }
+        };
 
 	const uploadDirectoryHandler = async () => {
 		// Check if File System Access API is supported

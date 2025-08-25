@@ -2305,6 +2305,12 @@ RAG_FILE_MAX_SIZE = PersistentConfig(
     ),
 )
 
+RAG_FILE_ASYNC_THRESHOLD = PersistentConfig(
+    "RAG_FILE_ASYNC_THRESHOLD",
+    "rag.file.async_threshold",
+    int(os.environ.get("RAG_FILE_ASYNC_THRESHOLD", 10)),
+)
+
 FILE_IMAGE_COMPRESSION_WIDTH = PersistentConfig(
     "FILE_IMAGE_COMPRESSION_WIDTH",
     "file.image_compression_width",

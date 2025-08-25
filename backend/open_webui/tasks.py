@@ -17,6 +17,8 @@ log.setLevel(SRC_LOG_LEVELS["MAIN"])
 # A dictionary to keep track of active tasks
 tasks: Dict[str, asyncio.Task] = {}
 item_tasks = {}
+tasks_status: Dict[str, str] = {}
+tasks_progress: Dict[str, int] = {}
 
 
 REDIS_TASKS_KEY = f"{REDIS_KEY_PREFIX}:tasks"
@@ -78,6 +80,21 @@ async def redis_send_command(redis: Redis, command: dict):
     await redis.publish(REDIS_PUBSUB_CHANNEL, json.dumps(command))
 
 
+def update_task_progress(task_id: str, progress: int):
+    tasks_progress[task_id] = progress
+
+
+def update_task_status(task_id: str, status: str):
+    tasks_status[task_id] = status
+
+
+def get_task_status(task_id: str):
+    return {
+        "status": tasks_status.get(task_id, "unknown"),
+        "progress": tasks_progress.get(task_id, 0),
+    }
+
+
 async def cleanup_task(redis, task_id: str, id=None):
     """
     Remove a completed or canceled task from the global `tasks` dictionary.
@@ -106,6 +123,9 @@ async def create_task(redis, coroutine, id=None):
         lambda t: asyncio.create_task(cleanup_task(redis, task_id, id))
     )
     tasks[task_id] = task
+
+    tasks_status[task_id] = "running"
+    tasks_progress[task_id] = 0
 
     # If an ID is provided, associate the task with that ID
     if item_tasks.get(id):
