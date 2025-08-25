@@ -273,7 +273,7 @@ class EmbeddingModelUpdateForm(BaseModel):
     azure_openai_config: Optional[AzureOpenAIConfigForm] = None
     embedding_engine: str
     embedding_model: str
-    embedding_batch_size: Optional[int] = 32
+    embedding_batch_size: Optional[int] = 256
 
 
 @router.post("/embedding/update")
@@ -881,7 +881,9 @@ async def update_rag_config(
     )
 
     # File upload settings
-    request.app.state.config.FILE_MAX_SIZE = form_data.FILE_MAX_SIZE
+    request.app.state.config.FILE_MAX_SIZE = (
+        form_data.FILE_MAX_SIZE if form_data.FILE_MAX_SIZE not in (None, 0) else None
+    )
     request.app.state.config.FILE_MAX_COUNT = form_data.FILE_MAX_COUNT
     request.app.state.config.FILE_ASYNC_THRESHOLD = form_data.FILE_ASYNC_THRESHOLD
     request.app.state.config.FILE_IMAGE_COMPRESSION_WIDTH = (
