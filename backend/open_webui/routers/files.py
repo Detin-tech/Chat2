@@ -84,7 +84,7 @@ def has_access_to_file(
 
 
 @router.post("/", response_model=FileModelResponse)
-def upload_file(
+async def upload_file(
     request: Request,
     file: UploadFile = File(...),
     metadata: Optional[dict | str] = Form(None),
@@ -172,7 +172,7 @@ def upload_file(
                         file_path = Storage.get_file(file_path)
                         result = transcribe(request, file_path, file_metadata)
 
-                        process_file(
+                        await process_file(
                             request,
                             ProcessFileForm(file_id=id, content=result.get("text", "")),
                             user=user,
@@ -180,14 +180,22 @@ def upload_file(
                     elif (not file.content_type.startswith(("image/", "video/"))) or (
                         request.app.state.config.CONTENT_EXTRACTION_ENGINE == "external"
                     ):
-                        process_file(request, ProcessFileForm(file_id=id), user=user)
+                        result = await process_file(
+                            request, ProcessFileForm(file_id=id), user=user
+                        )
                 else:
                     log.info(
                         f"File type {file.content_type} is not provided, but trying to process anyway"
                     )
-                    process_file(request, ProcessFileForm(file_id=id), user=user)
+                    result = await process_file(
+                        request, ProcessFileForm(file_id=id), user=user
+                    )
 
                 file_item = Files.get_file_by_id(id=id)
+                if isinstance(result, dict) and result.get("task_id"):
+                    file_item = FileModelResponse(
+                        **{**file_item.model_dump(), "task_id": result["task_id"]}
+                    )
             except Exception as e:
                 log.exception(e)
                 log.error(f"Error processing file: {file_item.id}")
@@ -386,7 +394,7 @@ async def update_file_data_content_by_id(
         or has_access_to_file(id, "write", user)
     ):
         try:
-            process_file(
+            await process_file(
                 request,
                 ProcessFileForm(file_id=id, content=form_data.content),
                 user=user,

@@ -19,16 +19,17 @@
 					? ' bg-gray-50 dark:bg-gray-850'
 					: 'bg-transparent'} hover:bg-gray-50 dark:hover:bg-gray-850 transition"
 				{small}
-				item={file}
-				name={file?.name ?? file?.meta?.name}
-				type="file"
-				size={file?.size ?? file?.meta?.size ?? ''}
-				loading={file.status === 'uploading'}
-				dismissible
-				on:click={() => {
-					if (file.status === 'uploading') {
-						return;
-					}
+                                item={file}
+                                name={file?.name ?? file?.meta?.name}
+                                type="file"
+                                size={file?.size ?? file?.meta?.size ?? ''}
+                                loading={file.status === 'uploading'}
+                                progress={file.progress}
+                                dismissible
+                                on:click={() => {
+                                        if (file.status === 'uploading') {
+                                                return;
+                                        }
 
 					dispatch('click', file.id);
 				}}

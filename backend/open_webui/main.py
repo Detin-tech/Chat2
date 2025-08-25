@@ -471,6 +471,7 @@ from open_webui.tasks import (
     list_task_ids_by_item_id,
     stop_task,
     list_tasks,
+    get_task_status,
 )  # Import from tasks.py
 
 from open_webui.utils.redis import get_sentinels_from_env
@@ -1569,6 +1570,13 @@ async def stop_task_endpoint(
         return result
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@app.get("/api/tasks/status/{task_id}")
+async def get_task_status_endpoint(
+    request: Request, task_id: str, user=Depends(get_verified_user)
+):
+    return get_task_status(task_id)
 
 
 @app.get("/api/tasks")

@@ -36,6 +36,8 @@ from open_webui.models.files import FileModel, Files
 from open_webui.models.knowledge import Knowledges
 from open_webui.storage.provider import Storage
 
+from open_webui.tasks import create_task, update_task_progress, update_task_status
+
 
 from open_webui.retrieval.vector.factory import VECTOR_DB_CLIENT
 
@@ -1329,8 +1331,7 @@ class ProcessFileForm(BaseModel):
     collection_name: Optional[str] = None
 
 
-@router.post("/process/file")
-def process_file(
+def _process_file_sync(
     request: Request,
     form_data: ProcessFileForm,
     user=Depends(get_verified_user),
@@ -1528,6 +1529,30 @@ def process_file(
                 detail=str(e),
             )
 
+
+@router.post("/process/file")
+async def process_file(
+    request: Request,
+    form_data: ProcessFileForm,
+    user=Depends(get_verified_user),
+):
+    file = Files.get_file_by_id(form_data.file_id)
+    size = (file.meta or {}).get("size", 0)
+    threshold = request.app.state.config.RAG_FILE_ASYNC_THRESHOLD
+    if threshold and size and size > threshold * 1024 * 1024:
+        async def runner():
+            try:
+                await asyncio.to_thread(_process_file_sync, request, form_data, user)
+                update_task_progress(task_id, 100)
+                update_task_status(task_id, "completed")
+            except Exception:
+                update_task_status(task_id, "failed")
+                raise
+
+        task_id, _ = await create_task(request.app.state.redis, runner(), id=file.id)
+        return {"status": True, "task_id": task_id}
+    else:
+        return await asyncio.to_thread(_process_file_sync, request, form_data, user)
 
 class ProcessTextForm(BaseModel):
     name: str
