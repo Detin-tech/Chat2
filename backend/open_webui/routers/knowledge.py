@@ -363,24 +363,37 @@ async def add_file_to_knowledge_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
     if not file.data:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.FILE_NOT_PROCESSED,
-        )
-
-    # Add content to the vector database
-    try:
-        await process_file(
-            request,
-            ProcessFileForm(file_id=form_data.file_id, collection_name=id),
-            user=user,
-        )
-    except Exception as e:
-        log.debug(e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+        try:
+            await process_file(
+                request,
+                ProcessFileForm(file_id=form_data.file_id, collection_name=id),
+                user=user,
+            )
+            file = Files.get_file_by_id(form_data.file_id)
+        except Exception as e:
+            log.debug(e)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
+        if not file.data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.FILE_NOT_PROCESSED,
+            )
+    else:
+        try:
+            await process_file(
+                request,
+                ProcessFileForm(file_id=form_data.file_id, collection_name=id),
+                user=user,
+            )
+        except Exception as e:
+            log.debug(e)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
 
     if knowledge:
         data = knowledge.data or {}
