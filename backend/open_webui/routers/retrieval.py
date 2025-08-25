@@ -273,7 +273,7 @@ class EmbeddingModelUpdateForm(BaseModel):
     azure_openai_config: Optional[AzureOpenAIConfigForm] = None
     embedding_engine: str
     embedding_model: str
-    embedding_batch_size: Optional[int] = 1
+    embedding_batch_size: Optional[int] = 256
 
 
 @router.post("/embedding/update")
