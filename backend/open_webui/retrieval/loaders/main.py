@@ -254,7 +254,7 @@ class Loader:
                     url=self.kwargs.get("TIKA_SERVER_URL"),
                     file_path=file_path,
                     mime_type=file_content_type,
-                    extract_images=self.kwargs.get("PDF_EXTRACT_IMAGES"),
+                    extract_images=self.kwargs.get("PDF_EXTRACT_IMAGES", False),
                 )
         elif (
             self.engine == "datalab_marker"
@@ -366,7 +366,7 @@ class Loader:
         else:
             if file_ext == "pdf":
                 loader = PyPDFLoader(
-                    file_path, extract_images=self.kwargs.get("PDF_EXTRACT_IMAGES")
+                    file_path, extract_images=self.kwargs.get("PDF_EXTRACT_IMAGES", False)
                 )
             elif file_ext == "csv":
                 loader = CSVLoader(file_path, autodetect_encoding=True)

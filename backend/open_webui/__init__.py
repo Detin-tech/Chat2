@@ -34,8 +34,15 @@ def main(
 def serve(
     host: str = "0.0.0.0",
     port: int = 8080,
+    pdf_extract_images: Annotated[
+        bool,
+        typer.Option(
+            help="Extract images from PDFs during ingestion (slower but more accurate)",
+        ),
+    ] = False,
 ):
     os.environ["FROM_INIT_PY"] = "true"
+    os.environ["PDF_EXTRACT_IMAGES"] = str(pdf_extract_images).lower()
     if os.getenv("WEBUI_SECRET_KEY") is None:
         typer.echo(
             "Loading WEBUI_SECRET_KEY from file, not provided as an environment variable."

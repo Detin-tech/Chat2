@@ -2348,10 +2348,12 @@ RAG_EMBEDDING_ENGINE = PersistentConfig(
     os.environ.get("RAG_EMBEDDING_ENGINE", ""),
 )
 
+# Extracting images from PDFs can improve OCR results but may significantly slow
+# ingestion. Disabled by default for performance.
 PDF_EXTRACT_IMAGES = PersistentConfig(
     "PDF_EXTRACT_IMAGES",
     "rag.pdf_extract_images",
-    os.environ.get("PDF_EXTRACT_IMAGES", "False").lower() == "true",
+    os.environ.get("PDF_EXTRACT_IMAGES", "false").lower() == "true",
 )
 
 RAG_EMBEDDING_MODEL = PersistentConfig(
