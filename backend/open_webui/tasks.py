@@ -118,10 +118,18 @@ async def create_task(redis, coroutine, id=None):
     task_id = str(uuid4())  # Generate a unique ID for the task
     task = asyncio.create_task(coroutine)  # Create the task
 
-    # Add a done callback for cleanup
-    task.add_done_callback(
-        lambda t: asyncio.create_task(cleanup_task(redis, task_id, id))
-    )
+    # Add a done callback to handle task result and cleanup
+    def _on_task_done(t: asyncio.Task):
+        try:
+            # Retrieve the result to prevent 'Task exception was never retrieved'
+            t.result()
+        except Exception as e:
+            log.exception(f"Task {task_id} raised an exception: {e}")
+            tasks_status[task_id] = "failed"
+        finally:
+            asyncio.create_task(cleanup_task(redis, task_id, id))
+
+    task.add_done_callback(_on_task_done)
     tasks[task_id] = task
 
     tasks_status[task_id] = "running"
