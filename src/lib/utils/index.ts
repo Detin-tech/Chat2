@@ -19,6 +19,7 @@ import { marked } from 'marked';
 import markedExtension from '$lib/utils/marked/extension';
 import markedKatexExtension from '$lib/utils/marked/katex-extension';
 import hljs from 'highlight.js';
+import PdfTextWorker from '$lib/workers/pdfText.worker?worker';
 
 //////////////////////////
 // Helper functions
@@ -1513,7 +1514,11 @@ export const parseJsonValue = (value: string): any => {
 	return value;
 };
 
-export const extractContentFromFile = async (file, pdfjsLib = null) => {
+export const extractContentFromFile = async (
+        file,
+        _pdfjsLib = null,
+        onProgress: ((current: number, total: number) => void) | null = null
+) => {
 	// Known text file extensions for extra fallback
 	const textExtensions = [
 		'.txt',
@@ -1535,23 +1540,38 @@ export const extractContentFromFile = async (file, pdfjsLib = null) => {
 		return dot === -1 ? '' : filename.substr(dot).toLowerCase();
 	}
 
-	// Uses pdfjs to extract text from PDF
-	async function extractPdfText(file) {
-		if (!pdfjsLib) {
-			throw new Error('pdfjsLib is required for PDF extraction');
-		}
+        // Uses pdfjs to extract text from PDF in a worker with progress updates
+        async function extractPdfText(
+                file: File,
+                onProgressCallback?: (current: number, total: number) => void
+        ) {
+                const arrayBuffer = await file.arrayBuffer();
 
-		const arrayBuffer = await file.arrayBuffer();
-		const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-		let allText = '';
-		for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-			const page = await pdf.getPage(pageNum);
-			const content = await page.getTextContent();
-			const strings = content.items.map((item) => item.str);
-			allText += strings.join(' ') + '\n';
-		}
-		return allText;
-	}
+                return new Promise((resolve, reject) => {
+                        const worker = new PdfTextWorker();
+
+                        worker.onmessage = (event) => {
+                                const { type, text, page, total, error } = event.data;
+
+                                if (type === 'progress') {
+                                        onProgressCallback && onProgressCallback(page, total);
+                                } else if (type === 'done') {
+                                        resolve(text);
+                                        worker.terminate();
+                                } else if (type === 'error') {
+                                        reject(new Error(error));
+                                        worker.terminate();
+                                }
+                        };
+
+                        worker.onerror = (err) => {
+                                reject(err);
+                                worker.terminate();
+                        };
+
+                        worker.postMessage({ arrayBuffer }, [arrayBuffer]);
+                });
+        }
 
 	// Reads file as text using FileReader
 	function readAsText(file) {
@@ -1567,9 +1587,9 @@ export const extractContentFromFile = async (file, pdfjsLib = null) => {
 	const ext = getExtension(file.name);
 
 	// PDF check
-	if (type === 'application/pdf' || ext === '.pdf') {
-		return await extractPdfText(file);
-	}
+        if (type === 'application/pdf' || ext === '.pdf') {
+                return await extractPdfText(file, onProgress);
+        }
 
 	// Text check (plain or common text-based)
 	if (type.startsWith('text/') || textExtensions.includes(ext)) {
