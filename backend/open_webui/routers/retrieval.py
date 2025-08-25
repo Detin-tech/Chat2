@@ -1397,21 +1397,89 @@ def _process_file_sync(
                     )
                     for idx, id in enumerate(result.ids[0])
                 ]
+                text_content = " ".join([doc.page_content for doc in docs])
             else:
-                docs = [
-                    Document(
-                        page_content=file.data.get("content", ""),
-                        metadata={
-                            **file.meta,
-                            "name": file.filename,
-                            "created_by": file.user_id,
-                            "file_id": file.id,
-                            "source": file.filename,
-                        },
-                    )
-                ]
-
-            text_content = file.data.get("content", "")
+                existing_content = (file.data or {}).get("content", "")
+                if existing_content.strip():
+                    docs = [
+                        Document(
+                            page_content=existing_content,
+                            metadata={
+                                **file.meta,
+                                "name": file.filename,
+                                "created_by": file.user_id,
+                                "file_id": file.id,
+                                "source": file.filename,
+                            },
+                        )
+                    ]
+                    text_content = existing_content
+                else:
+                    file_path = file.path
+                    if file_path:
+                        file_path = Storage.get_file(file_path)
+                        loader = Loader(
+                            engine=request.app.state.config.CONTENT_EXTRACTION_ENGINE,
+                            DATALAB_MARKER_API_KEY=request.app.state.config.DATALAB_MARKER_API_KEY,
+                            DATALAB_MARKER_API_BASE_URL=request.app.state.config.DATALAB_MARKER_API_BASE_URL,
+                            DATALAB_MARKER_ADDITIONAL_CONFIG=request.app.state.config.DATALAB_MARKER_ADDITIONAL_CONFIG,
+                            DATALAB_MARKER_SKIP_CACHE=False,
+                            DATALAB_MARKER_FORCE_OCR=False,
+                            DATALAB_MARKER_PAGINATE=False,
+                            DATALAB_MARKER_STRIP_EXISTING_OCR=False,
+                            DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION=False,
+                            DATALAB_MARKER_FORMAT_LINES=False,
+                            DATALAB_MARKER_USE_LLM=False,
+                            DATALAB_MARKER_OUTPUT_FORMAT=request.app.state.config.DATALAB_MARKER_OUTPUT_FORMAT,
+                            EXTERNAL_DOCUMENT_LOADER_URL=request.app.state.config.EXTERNAL_DOCUMENT_LOADER_URL,
+                            EXTERNAL_DOCUMENT_LOADER_API_KEY=request.app.state.config.EXTERNAL_DOCUMENT_LOADER_API_KEY,
+                            TIKA_SERVER_URL=request.app.state.config.TIKA_SERVER_URL,
+                            DOCLING_SERVER_URL=request.app.state.config.DOCLING_SERVER_URL,
+                            DOCLING_PARAMS={
+                                "ocr_engine": "",
+                                "ocr_lang": "",
+                                "do_picture_description": False,
+                                "picture_description_mode": "",
+                                "picture_description_local": {},
+                                "picture_description_api": {},
+                            },
+                            PDF_EXTRACT_IMAGES=False,
+                            DOCUMENT_INTELLIGENCE_ENDPOINT=request.app.state.config.DOCUMENT_INTELLIGENCE_ENDPOINT,
+                            DOCUMENT_INTELLIGENCE_KEY=request.app.state.config.DOCUMENT_INTELLIGENCE_KEY,
+                            MISTRAL_OCR_API_KEY=request.app.state.config.MISTRAL_OCR_API_KEY,
+                        )
+                        docs = [
+                            Document(
+                                page_content=doc.page_content,
+                                metadata={
+                                    **doc.metadata,
+                                    "name": file.filename,
+                                    "created_by": file.user_id,
+                                    "file_id": file.id,
+                                    "source": file.filename,
+                                },
+                            )
+                            for doc in loader.load(
+                                file.filename,
+                                file.meta.get("content_type"),
+                                file_path,
+                            )
+                        ]
+                        text_content = " ".join([doc.page_content for doc in docs])
+                    else:
+                        docs = [
+                            Document(
+                                page_content="",
+                                metadata={
+                                    **file.meta,
+                                    "name": file.filename,
+                                    "created_by": file.user_id,
+                                    "file_id": file.id,
+                                    "source": file.filename,
+                                },
+                            )
+                        ]
+                        text_content = ""
         else:
             # Process the file and save the content
             # Usage: /files/

@@ -32,3 +32,34 @@ class TestRetrieval(AbstractPostgresTest):
         assert response.status_code == 400
         assert response.json() == {"detail": ERROR_MESSAGES.EMPTY_CONTENT}
 
+    def test_process_file_with_collection_without_existing_content(self):
+        from pathlib import Path
+        from open_webui.models.files import Files, FileForm
+        from open_webui.config import UPLOAD_DIR
+
+        file_path = Path(UPLOAD_DIR) / "sample.txt"
+        file_path.write_text("hello world")
+
+        file = Files.insert_new_file(
+            "1",
+            FileForm(
+                id="sample-file",
+                filename="sample.txt",
+                path=str(file_path),
+                data={},
+                meta={"content_type": "text/plain", "size": file_path.stat().st_size},
+            ),
+        )
+
+        with mock_webui_user():
+            response = self.fast_api_client.post(
+                self.create_url("/process/file"),
+                json={"file_id": file.id, "collection_name": "test-collection"},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["status"] is True
+
+        processed = Files.get_file_by_id(file.id)
+        assert processed.data.get("content") == "hello world"
+
