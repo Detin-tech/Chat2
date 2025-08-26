@@ -138,8 +138,10 @@ type OllamaModelDetails = {
 	quantization_level: string;
 };
 
+import type { PinnedItem } from '$lib/utils/pinned-models';
+
 type Settings = {
-	pinnedModels?: never[];
+        pinnedModels?: PinnedItem[];
 	toolServers?: never[];
 	detectArtifacts?: boolean;
 	showUpdateToast?: boolean;

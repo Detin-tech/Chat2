@@ -2,11 +2,12 @@
 	import { models, showSettings, settings, user, mobile, config } from '$lib/stores';
 	import { onMount, tick, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import Selector from './ModelSelector/Selector.svelte';
-	import Tooltip from '../common/Tooltip.svelte';
+        import Selector from './ModelSelector/Selector.svelte';
+        import Tooltip from '../common/Tooltip.svelte';
 
-	import { updateUserSettings } from '$lib/apis/users';
-	const i18n = getContext('i18n');
+        import { updateUserSettings } from '$lib/apis/users';
+        import { getPinnedModelIds, removeModelFromTree, addModelToTree } from '$lib/utils/pinned-models';
+        const i18n = getContext('i18n');
 
 	export let selectedModels = [''];
 	export let disabled = false;
@@ -25,18 +26,19 @@
 		toast.success($i18n.t('Default model updated'));
 	};
 
-	const pinModelHandler = async (modelId) => {
-		let pinnedModels = $settings?.pinnedModels ?? [];
+        const pinModelHandler = async (modelId) => {
+                let pinnedTree = $settings?.pinnedModels ?? [];
+                const ids = getPinnedModelIds(pinnedTree);
 
-		if (pinnedModels.includes(modelId)) {
-			pinnedModels = pinnedModels.filter((id) => id !== modelId);
-		} else {
-			pinnedModels = [...new Set([...pinnedModels, modelId])];
-		}
+                if (ids.includes(modelId)) {
+                        pinnedTree = removeModelFromTree(pinnedTree, modelId);
+                } else {
+                        pinnedTree = addModelToTree(pinnedTree, modelId);
+                }
 
-		settings.set({ ...$settings, pinnedModels: pinnedModels });
-		await updateUserSettings(localStorage.token, { ui: $settings });
-	};
+                settings.set({ ...$settings, pinnedModels: pinnedTree });
+                await updateUserSettings(localStorage.token, { ui: $settings });
+        };
 
 	$: if (selectedModels.length > 0 && $models.length > 0) {
 		selectedModels = selectedModels.map((model) =>
