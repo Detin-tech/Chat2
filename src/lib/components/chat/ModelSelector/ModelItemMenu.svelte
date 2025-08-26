@@ -4,11 +4,12 @@
 
 	import { getContext } from 'svelte';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Link from '$lib/components/icons/Link.svelte';
-	import Eye from '$lib/components/icons/Eye.svelte';
-	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
-	import { settings } from '$lib/stores';
+        import Tooltip from '$lib/components/common/Tooltip.svelte';
+        import Link from '$lib/components/icons/Link.svelte';
+        import Eye from '$lib/components/icons/Eye.svelte';
+        import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
+        import { settings } from '$lib/stores';
+        import { getPinnedModelIds } from '$lib/utils/pinned-models';
 
 	const i18n = getContext('i18n');
 
@@ -18,7 +19,9 @@
 	export let pinModelHandler: (modelId: string) => void = () => {};
 	export let copyLinkHandler: Function = () => {};
 
-	export let onClose: Function = () => {};
+        export let onClose: Function = () => {};
+
+        $: pinnedIds = getPinnedModelIds($settings?.pinnedModels ?? []);
 </script>
 
 <DropdownMenu.Root
@@ -50,32 +53,32 @@
 		align="end"
 		transition={flyAndScale}
 	>
-		<DropdownMenu.Item
-			type="button"
-			aria-pressed={($settings?.pinnedModels ?? []).includes(model?.id)}
-			class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
-			on:click={(e) => {
-				e.stopPropagation();
-				e.preventDefault();
+                <DropdownMenu.Item
+                        type="button"
+                        aria-pressed={pinnedIds.includes(model?.id)}
+                        class="flex rounded-md py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
+                        on:click={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
 
-				pinModelHandler(model?.id);
-				show = false;
-			}}
-		>
-			{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
-				<EyeSlash />
-			{:else}
-				<Eye />
-			{/if}
+                                pinModelHandler(model?.id);
+                                show = false;
+                        }}
+                >
+                        {#if pinnedIds.includes(model?.id)}
+                                <EyeSlash />
+                        {:else}
+                                <Eye />
+                        {/if}
 
-			<div class="flex items-center">
-				{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
-					{$i18n.t('Hide from Sidebar')}
-				{:else}
-					{$i18n.t('Keep in Sidebar')}
-				{/if}
-			</div>
-		</DropdownMenu.Item>
+                        <div class="flex items-center">
+                                {#if pinnedIds.includes(model?.id)}
+                                        {$i18n.t('Hide from Sidebar')}
+                                {:else}
+                                        {$i18n.t('Keep in Sidebar')}
+                                {/if}
+                        </div>
+                </DropdownMenu.Item>
 
 		<DropdownMenu.Item
 			type="button"
