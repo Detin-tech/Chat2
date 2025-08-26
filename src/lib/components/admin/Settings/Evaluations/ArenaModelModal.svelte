@@ -37,7 +37,7 @@
 		}
 	};
 
-	let profileImageUrl = `${WEBUI_BASE_URL}/static/pc_logows.png`;
+	let profileImageUrl = `${WEBUI_BASE_URL}/static/static/favicon.png`;
 	let description = '';
 
 	let selectedModelId = '';
@@ -93,7 +93,7 @@
 
 		name = '';
 		id = '';
-		profileImageUrl = `${WEBUI_BASE_URL}/static/pc_logows.png`;
+		profileImageUrl = `${WEBUI_BASE_URL}/static/static/favicon.png`;
 		description = '';
 		modelIds = [];
 		selectedModelId = '';

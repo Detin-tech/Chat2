@@ -137,15 +137,15 @@
 
 			if (isDarkMode) {
 				const darkImage = new Image();
-				darkImage.src = `${WEBUI_BASE_URL}/static/pc_logows.png`;
+				darkImage.src = `${WEBUI_BASE_URL}/static/static/favicon.png`;
 
 				darkImage.onload = () => {
-					logo.src = `${WEBUI_BASE_URL}/static/pc_logows.png`;
-					logo.style.filter = ''; // Ensure no inversion is applied if pc_logows.png exists
+					logo.src = `${WEBUI_BASE_URL}/static/static/favicon.png`;
+					logo.style.filter = ''; // Ensure no inversion is applied if static/favicon.png exists
 				};
 
 				darkImage.onerror = () => {
-					logo.style.filter = 'invert(1)'; // Invert image if pc_logows.png is missing
+					logo.style.filter = 'invert(1)'; // Invert image if static/favicon.png is missing
 				};
 			}
 		}
@@ -216,7 +216,7 @@
 									<img
 										id="logo"
 										crossorigin="anonymous"
-										src="{WEBUI_BASE_URL}/static/pc_logows.png"
+										src="{WEBUI_BASE_URL}/static/static/favicon.png"
 										class="size-24 rounded-full"
 										alt=""
 									/>
@@ -552,7 +552,7 @@
 						<img
 							id="logo"
 							crossorigin="anonymous"
-							src="{WEBUI_BASE_URL}/static/pc_logows.png"
+							src="{WEBUI_BASE_URL}/static/static/favicon.png"
 							class=" w-6 rounded-full"
 							alt=""
 						/>

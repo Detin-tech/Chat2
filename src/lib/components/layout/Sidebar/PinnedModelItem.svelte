@@ -37,7 +37,7 @@
 			<div class="self-center shrink-0">
 				<img
 					crossorigin="anonymous"
-					src={model?.info?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/static/pc_logows.png`}
+					src={model?.info?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/static/static/favicon.png`}
 					class=" size-5 rounded-full -translate-x-[0.5px]"
 					alt="logo"
 				/>
