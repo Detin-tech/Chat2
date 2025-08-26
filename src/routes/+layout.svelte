@@ -279,7 +279,7 @@
 						if ($settings?.notificationEnabled ?? false) {
 							new Notification(`${title} • Prosper Chat`, {
 								body: content,
-								icon: `${WEBUI_BASE_URL}/static/favicon.png`
+								icon: `${WEBUI_BASE_URL}/static/pc_logows.png`
 							});
 						}
 					}
@@ -428,7 +428,7 @@
 					if ($settings?.notificationEnabled ?? false) {
 						new Notification(`${data?.user?.name} (#${event?.channel?.name}) • Prosper Chat`, {
 							body: data?.content,
-							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/favicon.png`
+							icon: data?.user?.profile_image_url ?? `${WEBUI_BASE_URL}/static/pc_logows.png`
 						});
 					}
 				}
@@ -648,7 +648,7 @@
 
 <svelte:head>
 	<title>{$WEBUI_NAME}</title>
-	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/favicon.png" />
+	<link crossorigin="anonymous" rel="icon" href="{WEBUI_BASE_URL}/static/pc_logows.png" />
 </svelte:head>
 
 {#if loaded}
