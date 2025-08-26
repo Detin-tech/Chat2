@@ -333,7 +333,7 @@
 								: 'opacity-50 dark:opacity-50'} "
 						>
 							<img
-								src={model?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/static/pc_logows.png`}
+								src={model?.meta?.profile_image_url ?? `${WEBUI_BASE_URL}/static/static/favicon.png`}
 								alt="modelfile profile"
 								class=" rounded-full w-full h-auto object-cover"
 							/>

@@ -146,7 +146,7 @@
 							src={message.user?.profile_image_url ??
 								($i18n.language === 'dg-DG'
 									? `${WEBUI_BASE_URL}/doge.png`
-									: `${WEBUI_BASE_URL}/static/pc_logows.png`)}
+									: `${WEBUI_BASE_URL}/static/static/favicon.png`)}
 							className={'size-8 translate-y-1 ml-0.5'}
 						/>
 					</ProfilePreview>
