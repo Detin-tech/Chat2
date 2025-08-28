@@ -737,19 +737,19 @@ for file_path in (FRONTEND_BUILD_DIR / "static").glob("**/*"):
         except Exception as e:
             logging.error(f"An error occurred: {e}")
 
-frontend_favicon = FRONTEND_BUILD_DIR / "static" / "pc_logows.png"
+frontend_favicon = FRONTEND_BUILD_DIR / "static" / "favicon_new.png"
 
 if frontend_favicon.exists():
     try:
-        shutil.copyfile(frontend_favicon, STATIC_DIR / "pc_logows.png")
+        shutil.copyfile(frontend_favicon, STATIC_DIR / "favicon_new.png")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
-frontend_splash = FRONTEND_BUILD_DIR / "static" / "pc_logows.png"
+frontend_splash = FRONTEND_BUILD_DIR / "static" / "favicon_new.png"
 
 if frontend_splash.exists():
     try:
-        shutil.copyfile(frontend_splash, STATIC_DIR / "pc_logows.png")
+        shutil.copyfile(frontend_splash, STATIC_DIR / "favicon_new.png")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
@@ -782,7 +782,7 @@ if CUSTOM_NAME:
 
                 r = requests.get(url, stream=True)
                 if r.status_code == 200:
-                    with open(f"{STATIC_DIR}/pc_logows.png", "wb") as f:
+                    with open(f"{STATIC_DIR}/favicon_new.png", "wb") as f:
                         r.raw.decode_content = True
                         shutil.copyfileobj(r.raw, f)
 
@@ -795,7 +795,7 @@ if CUSTOM_NAME:
 
                 r = requests.get(url, stream=True)
                 if r.status_code == 200:
-                    with open(f"{STATIC_DIR}/pc_logows.png", "wb") as f:
+                    with open(f"{STATIC_DIR}/favicon_new.png", "wb") as f:
                         r.raw.decode_content = True
                         shutil.copyfileobj(r.raw, f)
 
@@ -1323,7 +1323,7 @@ DEFAULT_ARENA_MODEL = {
     "id": "arena-model",
     "name": "Arena Model",
     "meta": {
-        "profile_image_url": "/static/pc_logows.png",
+        "profile_image_url": "/static/favicon_new.png",
         "description": "Submit your questions to anonymous AI chatbots and vote on the best response.",
         "model_ids": None,
     },
