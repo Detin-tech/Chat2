@@ -111,7 +111,7 @@ WEBUI_NAME = os.environ.get("WEBUI_NAME", "Prosper Chat")
 if WEBUI_NAME != "Prosper Chat":
     WEBUI_NAME += " (Prosper Chat)"
 
-WEBUI_FAVICON_URL = "https://openwebui.com/pc_logows.png"
+WEBUI_FAVICON_URL = "https://openwebui.com/favicon_new.png"
 
 TRUSTED_SIGNATURE_KEY = os.environ.get("TRUSTED_SIGNATURE_KEY", "")
 

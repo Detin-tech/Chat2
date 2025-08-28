@@ -78,7 +78,7 @@
 				<Tooltip content={$user?.role === 'admin' ? (item?.value ?? '') : ''} placement="top-start">
 					<img
 						src={item.model?.info?.meta?.profile_image_url ??
-							`${WEBUI_BASE_URL}/static/pc_logows.png`}
+							`${WEBUI_BASE_URL}/static/favicon_new.png`}
 						alt="Model"
 						class="rounded-full size-5 flex items-center"
 					/>
