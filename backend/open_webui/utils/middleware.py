@@ -48,6 +48,7 @@ from open_webui.routers.pipelines import (
     process_pipeline_inlet_filter,
     process_pipeline_outlet_filter,
 )
+from open_webui.utils.vision_router import vision_router_inlet
 from open_webui.routers.memories import query_memory, QueryMemoryForm
 
 from open_webui.utils.webhook import post_webhook
@@ -829,6 +830,12 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         form_data["files"] = files
 
     variables = form_data.pop("variables", None)
+
+    # Vision router inlet (placeholder)
+    try:
+        form_data = await vision_router_inlet(request, form_data, user)
+    except Exception:
+        pass
 
     # Process the form_data through the pipeline
     try:

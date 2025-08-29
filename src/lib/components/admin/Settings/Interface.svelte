@@ -26,29 +26,45 @@
 
 	const i18n = getContext('i18n');
 
-	let taskConfig = {
-		TASK_MODEL: '',
-		TASK_MODEL_EXTERNAL: '',
-		ENABLE_TITLE_GENERATION: true,
-		TITLE_GENERATION_PROMPT_TEMPLATE: '',
-		ENABLE_FOLLOW_UP_GENERATION: true,
-		FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: '',
-		IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE: '',
-		ENABLE_AUTOCOMPLETE_GENERATION: true,
-		AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH: -1,
-		TAGS_GENERATION_PROMPT_TEMPLATE: '',
-		ENABLE_TAGS_GENERATION: true,
-		ENABLE_SEARCH_QUERY_GENERATION: true,
-		ENABLE_RETRIEVAL_QUERY_GENERATION: true,
-		QUERY_GENERATION_PROMPT_TEMPLATE: '',
-		TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE: ''
-	};
+        let taskConfig = {
+                TASK_MODEL: '',
+                TASK_MODEL_EXTERNAL: '',
+                ENABLE_TITLE_GENERATION: true,
+                TITLE_GENERATION_PROMPT_TEMPLATE: '',
+                ENABLE_FOLLOW_UP_GENERATION: true,
+                FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: '',
+                IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE: '',
+                ENABLE_AUTOCOMPLETE_GENERATION: true,
+                AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH: -1,
+                TAGS_GENERATION_PROMPT_TEMPLATE: '',
+                ENABLE_TAGS_GENERATION: true,
+                ENABLE_SEARCH_QUERY_GENERATION: true,
+                ENABLE_RETRIEVAL_QUERY_GENERATION: true,
+                QUERY_GENERATION_PROMPT_TEMPLATE: '',
+                TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE: '',
+                VISION_ROUTER_ENABLED: false,
+                VISION_ROUTER_MODE: 'prepass',
+                VISION_ROUTER_MODEL: '',
+                VISION_ROUTER_SKIP_MODELS: [],
+                VISION_ROUTER_ENABLE_ADMINS: true,
+                VISION_ROUTER_ENABLE_USERS: true,
+                VISION_ROUTER_SHOW_STATUS_EVENTS: true
+        };
+
+        let visionModelError = false;
 
 	let promptSuggestions = [];
 	let banners: Banner[] = [];
 
-	const updateInterfaceHandler = async () => {
-		taskConfig = await updateTaskConfig(localStorage.token, taskConfig);
+        const updateInterfaceHandler = async () => {
+                if (taskConfig.VISION_ROUTER_ENABLED && taskConfig.VISION_ROUTER_MODEL === '') {
+                        visionModelError = true;
+                        toast.error($i18n.t('Vision model required'));
+                        return;
+                }
+                visionModelError = false;
+
+                taskConfig = await updateTaskConfig(localStorage.token, taskConfig);
 
 		promptSuggestions = promptSuggestions.filter((p) => p.content !== '');
 		promptSuggestions = await setDefaultPromptSuggestions(localStorage.token, promptSuggestions);
@@ -373,17 +389,95 @@
 						content={$i18n.t('Leave empty to use the default prompt, or enter a custom prompt')}
 						placement="top-start"
 					>
-						<Textarea
-							bind:value={taskConfig.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE}
-							placeholder={$i18n.t(
-								'Leave empty to use the default prompt, or enter a custom prompt'
-							)}
-						/>
-					</Tooltip>
-				</div>
-			</div>
+                                                <Textarea
+                                                        bind:value={taskConfig.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE}
+                                                        placeholder={$i18n.t(
+                                                                'Leave empty to use the default prompt, or enter a custom prompt'
+                                                        )}
+                                                />
+                                        </Tooltip>
+                                </div>
 
-			<div class="mb-3.5">
+                                <div class="mb-2.5 mt-4">
+                                        <div class=" mb-1 text-xs font-medium">{$i18n.t('Vision Router')}</div>
+
+                                        <div class="mb-2.5 flex w-full items-center justify-between">
+                                                <div class=" self-center text-xs font-medium">
+                                                        {$i18n.t('Enable Vision Router')}
+                                                </div>
+
+                                                <Switch bind:state={taskConfig.VISION_ROUTER_ENABLED} />
+                                        </div>
+
+                                        {#if taskConfig.VISION_ROUTER_ENABLED}
+                                                <div class="mb-2.5">
+                                                        <div class=" mb-1 text-xs font-medium">{$i18n.t('Vision Mode')}</div>
+                                                        <select
+                                                                class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                                bind:value={taskConfig.VISION_ROUTER_MODE}
+                                                        >
+                                                                <option value="prepass">{$i18n.t('Prepass')}</option>
+                                                                <option value="reroute">{$i18n.t('Reroute')}</option>
+                                                        </select>
+                                                </div>
+
+                                                <div class="mb-2.5">
+                                                        <div class=" mb-1 text-xs font-medium">{$i18n.t('Vision Model')}</div>
+                                                        <select
+                                                                class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                                bind:value={taskConfig.VISION_ROUTER_MODEL}
+                                                        >
+                                                                <option value="" selected>{$i18n.t('Select a model')}</option>
+                                                                {#each models as model}
+                                                                        <option value={model.id} class="bg-gray-100 dark:bg-gray-700">{model.name}</option>
+                                                                {/each}
+                                                        </select>
+                                                        {#if visionModelError}
+                                                                <div class=" text-xs text-red-500 mt-1">{$i18n.t('Vision model required')}</div>
+                                                        {/if}
+                                                </div>
+
+                                                <div class="mb-2.5">
+                                                        <div class=" mb-1 text-xs font-medium">{$i18n.t('Skip Reroute Models')}</div>
+                                                        <select
+                                                                multiple
+                                                                class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                                bind:value={taskConfig.VISION_ROUTER_SKIP_MODELS}
+                                                        >
+                                                                {#each models as model}
+                                                                        <option value={model.id} class="bg-gray-100 dark:bg-gray-700">{model.name}</option>
+                                                                {/each}
+                                                        </select>
+                                                </div>
+
+                                                <div class="mb-2.5 flex w-full items-center justify-between">
+                                                        <div class=" self-center text-xs font-medium">
+                                                                {$i18n.t('Enable for Admins')}
+                                                        </div>
+
+                                                        <Switch bind:state={taskConfig.VISION_ROUTER_ENABLE_ADMINS} />
+                                                </div>
+
+                                                <div class="mb-2.5 flex w-full items-center justify-between">
+                                                        <div class=" self-center text-xs font-medium">
+                                                                {$i18n.t('Enable for Users')}
+                                                        </div>
+
+                                                        <Switch bind:state={taskConfig.VISION_ROUTER_ENABLE_USERS} />
+                                                </div>
+
+                                                <div class="mb-2.5 flex w-full items-center justify-between">
+                                                        <div class=" self-center text-xs font-medium">
+                                                                {$i18n.t('Show Status Events')}
+                                                        </div>
+
+                                                        <Switch bind:state={taskConfig.VISION_ROUTER_SHOW_STATUS_EVENTS} />
+                                                </div>
+                                        {/if}
+                                </div>
+                        </div>
+
+                        <div class="mb-3.5">
 				<div class=" mb-2.5 text-base font-medium">{$i18n.t('UI')}</div>
 
 				<hr class=" border-gray-100 dark:border-gray-850 my-2" />

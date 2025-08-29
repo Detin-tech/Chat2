@@ -1729,6 +1729,52 @@ Your task is to synthesize these responses into a single, high-quality response.
 Responses from models: {{responses}}"""
 
 
+# Vision Router configuration
+VISION_ROUTER_ENABLED = PersistentConfig(
+    "VISION_ROUTER_ENABLED",
+    "task.vision_router.enable",
+    os.environ.get("VISION_ROUTER_ENABLED", "False").lower() == "true",
+)
+
+VISION_ROUTER_MODE = PersistentConfig(
+    "VISION_ROUTER_MODE",
+    "task.vision_router.mode",
+    os.environ.get("VISION_ROUTER_MODE", "prepass"),
+)
+
+VISION_ROUTER_MODEL = PersistentConfig(
+    "VISION_ROUTER_MODEL",
+    "task.vision_router.model",
+    os.environ.get("VISION_ROUTER_MODEL", ""),
+)
+
+VISION_ROUTER_SKIP_MODELS = PersistentConfig(
+    "VISION_ROUTER_SKIP_MODELS",
+    "task.vision_router.skip_models",
+    os.environ.get("VISION_ROUTER_SKIP_MODELS", "").split(",")
+    if os.environ.get("VISION_ROUTER_SKIP_MODELS")
+    else [],
+)
+
+VISION_ROUTER_ENABLE_ADMINS = PersistentConfig(
+    "VISION_ROUTER_ENABLE_ADMINS",
+    "task.vision_router.enable_admins",
+    os.environ.get("VISION_ROUTER_ENABLE_ADMINS", "True").lower() == "true",
+)
+
+VISION_ROUTER_ENABLE_USERS = PersistentConfig(
+    "VISION_ROUTER_ENABLE_USERS",
+    "task.vision_router.enable_users",
+    os.environ.get("VISION_ROUTER_ENABLE_USERS", "True").lower() == "true",
+)
+
+VISION_ROUTER_SHOW_STATUS_EVENTS = PersistentConfig(
+    "VISION_ROUTER_SHOW_STATUS_EVENTS",
+    "task.vision_router.show_status_events",
+    os.environ.get("VISION_ROUTER_SHOW_STATUS_EVENTS", "True").lower() == "true",
+)
+
+
 ####################################
 # Code Interpreter
 ####################################

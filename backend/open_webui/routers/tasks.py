@@ -68,6 +68,13 @@ async def get_task_config(request: Request, user=Depends(get_verified_user)):
         "ENABLE_RETRIEVAL_QUERY_GENERATION": request.app.state.config.ENABLE_RETRIEVAL_QUERY_GENERATION,
         "QUERY_GENERATION_PROMPT_TEMPLATE": request.app.state.config.QUERY_GENERATION_PROMPT_TEMPLATE,
         "TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE": request.app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
+        "VISION_ROUTER_ENABLED": request.app.state.config.VISION_ROUTER_ENABLED,
+        "VISION_ROUTER_MODE": request.app.state.config.VISION_ROUTER_MODE,
+        "VISION_ROUTER_MODEL": request.app.state.config.VISION_ROUTER_MODEL,
+        "VISION_ROUTER_SKIP_MODELS": request.app.state.config.VISION_ROUTER_SKIP_MODELS,
+        "VISION_ROUTER_ENABLE_ADMINS": request.app.state.config.VISION_ROUTER_ENABLE_ADMINS,
+        "VISION_ROUTER_ENABLE_USERS": request.app.state.config.VISION_ROUTER_ENABLE_USERS,
+        "VISION_ROUTER_SHOW_STATUS_EVENTS": request.app.state.config.VISION_ROUTER_SHOW_STATUS_EVENTS,
     }
 
 
@@ -87,6 +94,13 @@ class TaskConfigForm(BaseModel):
     ENABLE_RETRIEVAL_QUERY_GENERATION: bool
     QUERY_GENERATION_PROMPT_TEMPLATE: str
     TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE: str
+    VISION_ROUTER_ENABLED: bool
+    VISION_ROUTER_MODE: str
+    VISION_ROUTER_MODEL: str
+    VISION_ROUTER_SKIP_MODELS: list[str]
+    VISION_ROUTER_ENABLE_ADMINS: bool
+    VISION_ROUTER_ENABLE_USERS: bool
+    VISION_ROUTER_SHOW_STATUS_EVENTS: bool
 
 
 @router.post("/config/update")
@@ -136,6 +150,22 @@ async def update_task_config(
         form_data.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
     )
 
+    request.app.state.config.VISION_ROUTER_ENABLED = form_data.VISION_ROUTER_ENABLED
+    request.app.state.config.VISION_ROUTER_MODE = form_data.VISION_ROUTER_MODE
+    request.app.state.config.VISION_ROUTER_MODEL = form_data.VISION_ROUTER_MODEL
+    request.app.state.config.VISION_ROUTER_SKIP_MODELS = (
+        form_data.VISION_ROUTER_SKIP_MODELS
+    )
+    request.app.state.config.VISION_ROUTER_ENABLE_ADMINS = (
+        form_data.VISION_ROUTER_ENABLE_ADMINS
+    )
+    request.app.state.config.VISION_ROUTER_ENABLE_USERS = (
+        form_data.VISION_ROUTER_ENABLE_USERS
+    )
+    request.app.state.config.VISION_ROUTER_SHOW_STATUS_EVENTS = (
+        form_data.VISION_ROUTER_SHOW_STATUS_EVENTS
+    )
+
     return {
         "TASK_MODEL": request.app.state.config.TASK_MODEL,
         "TASK_MODEL_EXTERNAL": request.app.state.config.TASK_MODEL_EXTERNAL,
@@ -152,6 +182,13 @@ async def update_task_config(
         "ENABLE_RETRIEVAL_QUERY_GENERATION": request.app.state.config.ENABLE_RETRIEVAL_QUERY_GENERATION,
         "QUERY_GENERATION_PROMPT_TEMPLATE": request.app.state.config.QUERY_GENERATION_PROMPT_TEMPLATE,
         "TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE": request.app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
+        "VISION_ROUTER_ENABLED": request.app.state.config.VISION_ROUTER_ENABLED,
+        "VISION_ROUTER_MODE": request.app.state.config.VISION_ROUTER_MODE,
+        "VISION_ROUTER_MODEL": request.app.state.config.VISION_ROUTER_MODEL,
+        "VISION_ROUTER_SKIP_MODELS": request.app.state.config.VISION_ROUTER_SKIP_MODELS,
+        "VISION_ROUTER_ENABLE_ADMINS": request.app.state.config.VISION_ROUTER_ENABLE_ADMINS,
+        "VISION_ROUTER_ENABLE_USERS": request.app.state.config.VISION_ROUTER_ENABLE_USERS,
+        "VISION_ROUTER_SHOW_STATUS_EVENTS": request.app.state.config.VISION_ROUTER_SHOW_STATUS_EVENTS,
     }
 
 
