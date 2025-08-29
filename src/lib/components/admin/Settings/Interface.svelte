@@ -80,10 +80,10 @@
 		_banners.set(await setBanners(localStorage.token, banners));
 	};
 
-	let workspaceModels = null;
-	let baseModels = null;
+        let workspaceModels = null;
+        let baseModels = null;
 
-	let models = null;
+        let models = null;
 
         const init = async () => {
                 try {
@@ -91,8 +91,19 @@
                         promptSuggestions = $config?.default_prompt_suggestions ?? [];
                         banners = await getBanners(localStorage.token);
 
-                        workspaceModels = await getBaseModels(localStorage.token);
-                        baseModels = await getModels(localStorage.token, null, false);
+                        try {
+                                workspaceModels = await getBaseModels(localStorage.token);
+                        } catch (err) {
+                                console.error('Failed to load workspace models', err);
+                                workspaceModels = [];
+                        }
+
+                        try {
+                                baseModels = await getModels(localStorage.token, null, false);
+                        } catch (err) {
+                                console.error('Failed to load base models', err);
+                                baseModels = [];
+                        }
 
                         models = baseModels.map((m) => {
                                 const workspaceModel = workspaceModels.find((wm) => wm.id === m.id);
