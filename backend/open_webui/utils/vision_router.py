@@ -2,7 +2,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, List
+from typing import Any
 
 from fastapi import Request
 
@@ -31,7 +31,7 @@ async def vision_router_inlet(
         return body
 
     try:
-        messages: List[dict] = body.get("messages", [])
+        messages: list[dict] = body.get("messages", [])
         if not messages:
             vr_meta["skipped_reason"] = "no_messages"
             return body
@@ -47,7 +47,7 @@ async def vision_router_inlet(
 
         last_msg = messages[last_index]
         images = (last_msg.get("images") or [])[:4]
-        content_images = []
+        content_images: list[dict] = []
         if isinstance(last_msg.get("content"), list):
             for item in last_msg["content"]:
                 if item.get("type") == "image_url":
@@ -89,7 +89,10 @@ async def vision_router_inlet(
                     await event_emitter(
                         {
                             "type": "status",
-                            "data": {"message": f"Request routed to {vision_model_id}"},
+                            "data": {
+                                "description": f"Request routed to {vision_model_id}",
+                                "done": True,
+                            },
                         }
                     )
             end = time.monotonic()
@@ -103,6 +106,16 @@ async def vision_router_inlet(
             last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
             return body
 
+        prepass_user_msg = {"role": "user"}
+        if images:
+            prepass_user_msg["content"] = "Describe precisely; no speculation."
+            prepass_user_msg["images"] = images
+        else:
+            prepass_user_msg["content"] = [
+                {"type": "text", "text": "Describe precisely; no speculation."},
+                *content_images,
+            ]
+
         prepass_messages = [
             {
                 "role": "system",
@@ -113,7 +126,7 @@ async def vision_router_inlet(
                     "No prose outside the JSON."
                 ),
             },
-            {"role": "user", "content": content_images, "images": images},
+            prepass_user_msg,
         ]
 
         prepass_body = {
@@ -142,7 +155,13 @@ async def vision_router_inlet(
             log.exception(f"vision prepass error: {e}")
             if event_emitter:
                 await event_emitter(
-                    {"type": "status", "data": {"message": "Vision prepass failed"}}
+                    {
+                        "type": "status",
+                        "data": {
+                            "description": "Vision prepass failed",
+                            "done": True,
+                        },
+                    }
                 )
             vr_meta["skipped_reason"] = "prepass_failed"
             end = time.monotonic()
@@ -163,17 +182,31 @@ async def vision_router_inlet(
         )
         try:
             prepass_json = json.loads(content)
-        except Exception as e:
-            log.exception(f"prepass json parse error: {e}")
-            if event_emitter:
-                await event_emitter(
-                    {"type": "status", "data": {"message": "Vision prepass failed"}}
-                )
-            vr_meta["skipped_reason"] = "json_parse_failed"
-            end = time.monotonic()
-            vr_meta["latency_ms"] = int((end - start) * 1000)
-            last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
-            return body
+        except Exception:
+            try:
+                start_idx = content.find("{")
+                end_idx = content.rfind("}")
+                if start_idx != -1 and end_idx != -1:
+                    prepass_json = json.loads(content[start_idx : end_idx + 1])
+                else:
+                    raise ValueError("no json object found")
+            except Exception as e:
+                log.exception(f"prepass json parse error: {e}")
+                if event_emitter:
+                    await event_emitter(
+                        {
+                            "type": "status",
+                            "data": {
+                                "description": "Vision prepass failed",
+                                "done": True,
+                            },
+                        }
+                    )
+                vr_meta["skipped_reason"] = "json_parse_failed"
+                end = time.monotonic()
+                vr_meta["latency_ms"] = int((end - start) * 1000)
+                last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
+                return body
 
         # Prepass succeeded
         vr_meta["used_model"] = vision_model_id
@@ -189,6 +222,8 @@ async def vision_router_inlet(
             last_msg["content"] = [
                 c for c in last_msg["content"] if c.get("type") != "image_url"
             ]
+            if not last_msg["content"]:
+                last_msg["content"] = "Describe precisely; no speculation."
 
         # Inject system message with JSON
         messages.insert(
@@ -207,7 +242,8 @@ async def vision_router_inlet(
                 {
                     "type": "status",
                     "data": {
-                        "message": f"Vision prepass completed via {vision_model_id}"
+                        "description": f"Vision prepass completed via {vision_model_id}",
+                        "done": True,
                     },
                 }
             )
