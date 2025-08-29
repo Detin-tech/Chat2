@@ -93,7 +93,7 @@
 
 	export let chatIdProp = '';
 
-	let loading = true;
+let loading = !!chatIdProp;
 
 	const eventTarget = new EventTarget();
 	let controlPane;
@@ -457,30 +457,24 @@
 		}
 	};
 
-	let pageSubscribe = null;
-	onMount(async () => {
-		loading = true;
-		console.log('mounted');
-		window.addEventListener('message', onMessageHandler);
-		$socket?.on('chat-events', chatEventHandler);
+        let pageSubscribe = null;
+        onMount(async () => {
+                console.log('mounted');
+                window.addEventListener('message', onMessageHandler);
+                $socket?.on('chat-events', chatEventHandler);
 
-		pageSubscribe = page.subscribe(async (p) => {
-			if (p.url.pathname === '/') {
-				await tick();
-				initNewChat();
-			}
-		});
+                pageSubscribe = page.subscribe(async (p) => {
+                        if (p.url.pathname === '/') {
+                                await tick();
+                                initNewChat();
+                        }
+                });
 
-		const storageChatInput = sessionStorage.getItem(
-			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
-		);
+                const storageChatInput = sessionStorage.getItem(
+                        `chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
+                );
 
-		if (!chatIdProp) {
-			loading = false;
-			await tick();
-		}
-
-		if (storageChatInput) {
+                if (storageChatInput) {
 			prompt = '';
 			messageInput?.setText('');
 
