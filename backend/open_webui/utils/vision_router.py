@@ -12,10 +12,13 @@ from open_webui.utils.chat import generate_direct_chat_completion
 log = logging.getLogger(__name__)
 
 
-async def vision_router_inlet(
-    request: Request, body: dict, user: Any, metadata: dict
-):
-    """Vision router inlet filter implementing prepass and reroute modes."""
+async def vision_router_inlet(request: Request, body: dict, user: Any, metadata: dict):
+    """Filter chat completion requests for vision prepass or reroute.
+
+    Depending on configuration, either performs a lightweight JSON prepass with a
+    vision model or reroutes the entire request to a vision-capable model. Metadata
+    about the decision and timing is stored on the last user message.
+    """
 
     cfg = request.app.state.config
     vr_meta = {
@@ -30,19 +33,27 @@ async def vision_router_inlet(
     if not vr_meta["enabled"]:
         return body
 
+    start = time.monotonic()
+
     try:
         messages: list[dict] = body.get("messages", [])
         if not messages:
             vr_meta["skipped_reason"] = "no_messages"
+            vr_meta["latency_ms"] = int((time.monotonic() - start) * 1000)
             return body
 
         # Locate last user message
         last_index = next(
-            (i for i in range(len(messages) - 1, -1, -1) if messages[i].get("role") == "user"),
+            (
+                i
+                for i in range(len(messages) - 1, -1, -1)
+                if messages[i].get("role") == "user"
+            ),
             None,
         )
         if last_index is None:
             vr_meta["skipped_reason"] = "no_user_message"
+            vr_meta["latency_ms"] = int((time.monotonic() - start) * 1000)
             return body
 
         last_msg = messages[last_index]
@@ -54,23 +65,40 @@ async def vision_router_inlet(
                     content_images.append(item)
         if not images and not content_images:
             vr_meta["skipped_reason"] = "no_images"
+            end = time.monotonic()
+            vr_meta["latency_ms"] = int((end - start) * 1000)
+            last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
             return body
 
         current_model_id = body.get("model")
         model_info = request.app.state.MODELS.get(current_model_id, {})
         if model_info.get("capabilities", {}).get("vision"):
             vr_meta["skipped_reason"] = "model_has_vision"
+            end = time.monotonic()
+            vr_meta["latency_ms"] = int((end - start) * 1000)
+            last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
             return body
 
         if current_model_id in getattr(cfg, "VISION_ROUTER_SKIP_MODELS", []):
             vr_meta["skipped_reason"] = "skip_list"
+            end = time.monotonic()
+            vr_meta["latency_ms"] = int((end - start) * 1000)
+            last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
             return body
 
-        if user.role == "admin" and not getattr(cfg, "VISION_ROUTER_ENABLE_ADMINS", True):
+        if user.role == "admin" and not getattr(
+            cfg, "VISION_ROUTER_ENABLE_ADMINS", True
+        ):
             vr_meta["skipped_reason"] = "admins_disabled"
+            end = time.monotonic()
+            vr_meta["latency_ms"] = int((end - start) * 1000)
+            last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
             return body
         if user.role == "user" and not getattr(cfg, "VISION_ROUTER_ENABLE_USERS", True):
             vr_meta["skipped_reason"] = "users_disabled"
+            end = time.monotonic()
+            vr_meta["latency_ms"] = int((end - start) * 1000)
+            last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
             return body
 
         event_emitter = None
@@ -78,7 +106,6 @@ async def vision_router_inlet(
             event_emitter = get_event_emitter(metadata)
 
         vision_model_id = getattr(cfg, "VISION_ROUTER_MODEL", "")
-        start = time.monotonic()
 
         # Reroute mode
         if vr_meta["mode"] == "reroute":
@@ -103,6 +130,8 @@ async def vision_router_inlet(
         # Prepass mode
         if not vision_model_id:
             vr_meta["skipped_reason"] = "no_router_model"
+            end = time.monotonic()
+            vr_meta["latency_ms"] = int((end - start) * 1000)
             last_msg.setdefault("metadata", {})["vision_router"] = vr_meta
             return body
 
@@ -175,10 +204,7 @@ async def vision_router_inlet(
             request.state.model = prev_model
 
         content = (
-            (res or {})
-            .get("choices", [{}])[0]
-            .get("message", {})
-            .get("content", "")
+            (res or {}).get("choices", [{}])[0].get("message", {}).get("content", "")
         )
         try:
             prepass_json = json.loads(content)
