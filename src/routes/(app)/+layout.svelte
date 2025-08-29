@@ -57,10 +57,11 @@
 
 	let version;
 
-	onMount(async () => {
-		if ($user === undefined || $user === null) {
-			await goto('/auth');
-		} else if (['user', 'admin'].includes($user?.role)) {
+        onMount(async () => {
+                try {
+                        if ($user === undefined || $user === null) {
+                                await goto('/auth');
+                        } else if (['user', 'admin'].includes($user?.role)) {
 			try {
 				// Check if IndexedDB exists
 				DB = await openDB('Chats', 1);
@@ -242,11 +243,15 @@
 					checkForVersionUpdates();
 				}
 			}
-			await tick();
-		}
-
-		loaded = true;
-	});
+                        await tick();
+                        }
+                } catch (error) {
+                        console.error(error);
+                        toast.error($i18n.t('Failed to load initial data'));
+                } finally {
+                        loaded = true;
+                }
+        });
 
 	const checkForVersionUpdates = async () => {
 		version = await getVersionUpdates(localStorage.token).catch((error) => {
