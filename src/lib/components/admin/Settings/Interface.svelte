@@ -83,7 +83,7 @@
         let workspaceModels = null;
         let baseModels = null;
 
-        let models = null;
+        let models = [];
 
         const init = async () => {
                 try {
@@ -408,22 +408,6 @@
 					</Tooltip>
 				</div>
 
-				<div class="mb-2.5">
-					<div class=" mb-1 text-xs font-medium">{$i18n.t('Tools Function Calling Prompt')}</div>
-
-					<Tooltip
-						content={$i18n.t('Leave empty to use the default prompt, or enter a custom prompt')}
-						placement="top-start"
-					>
-                                                <Textarea
-                                                        bind:value={taskConfig.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE}
-                                                        placeholder={$i18n.t(
-                                                                'Leave empty to use the default prompt, or enter a custom prompt'
-                                                        )}
-                                                />
-                                        </Tooltip>
-                                </div>
-
                                 <div class="mb-2.5 mt-4">
                                         <div class=" mb-1 text-xs font-medium">{$i18n.t('Vision Router')}</div>
 
@@ -454,7 +438,7 @@
                                                                 bind:value={taskConfig.VISION_ROUTER_MODEL}
                                                         >
                                                                 <option value="" selected>{$i18n.t('Select a model')}</option>
-                                                                {#each models.filter((m) => m?.meta?.capabilities?.vision || m?.info?.meta?.capabilities?.vision || m?.capabilities?.vision) as model}
+                                                                {#each (models?.filter((m) => m?.meta?.capabilities?.vision || m?.info?.meta?.capabilities?.vision || m?.capabilities?.vision) || []) as model}
                                                                         <option value={model.id} class="bg-gray-100 dark:bg-gray-700">{model.name}</option>
                                                                 {/each}
                                                         </select>
