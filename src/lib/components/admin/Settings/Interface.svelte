@@ -24,9 +24,9 @@
 
 	const dispatch = createEventDispatcher();
 
-	const i18n = getContext('i18n');
+        const i18n = getContext('i18n');
 
-        let taskConfig = {
+        const defaultTaskConfig = {
                 TASK_MODEL: '',
                 TASK_MODEL_EXTERNAL: '',
                 ENABLE_TITLE_GENERATION: true,
@@ -51,10 +51,13 @@
                 VISION_ROUTER_SHOW_STATUS_EVENTS: true
         };
 
+        let taskConfig = { ...defaultTaskConfig };
+
         let visionModelError = false;
 
-	let promptSuggestions = [];
-	let banners: Banner[] = [];
+        let promptSuggestions = [];
+        let banners: Banner[] = [];
+        let initFailed = false;
 
         const updateInterfaceHandler = async () => {
                 if (taskConfig.VISION_ROUTER_ENABLED && taskConfig.VISION_ROUTER_MODEL === '') {
@@ -82,42 +85,54 @@
 
 	let models = null;
 
-	const init = async () => {
-		taskConfig = await getTaskConfig(localStorage.token);
-		promptSuggestions = $config?.default_prompt_suggestions ?? [];
-		banners = await getBanners(localStorage.token);
+        const init = async () => {
+                try {
+                        taskConfig = await getTaskConfig(localStorage.token);
+                        promptSuggestions = $config?.default_prompt_suggestions ?? [];
+                        banners = await getBanners(localStorage.token);
 
-		workspaceModels = await getBaseModels(localStorage.token);
-		baseModels = await getModels(localStorage.token, null, false);
+                        workspaceModels = await getBaseModels(localStorage.token);
+                        baseModels = await getModels(localStorage.token, null, false);
 
-		models = baseModels.map((m) => {
-			const workspaceModel = workspaceModels.find((wm) => wm.id === m.id);
+                        models = baseModels.map((m) => {
+                                const workspaceModel = workspaceModels.find((wm) => wm.id === m.id);
 
-			if (workspaceModel) {
-				return {
-					...m,
-					...workspaceModel
-				};
-			} else {
-				return {
-					...m,
-					id: m.id,
-					name: m.name,
+                                if (workspaceModel) {
+                                        return {
+                                                ...m,
+                                                ...workspaceModel
+                                        };
+                                } else {
+                                        return {
+                                                ...m,
+                                                id: m.id,
+                                                name: m.name,
 
-					is_active: true
-				};
-			}
-		});
+                                                is_active: true
+                                        };
+                                }
+                        });
 
-		console.debug('models', models);
-	};
+                        console.debug('models', models);
+                } catch (error) {
+                        console.error('Error initializing interface settings', error);
+                        toast.error($i18n.t('Failed to load interface settings'));
+                        taskConfig = { ...defaultTaskConfig };
+                        promptSuggestions = [];
+                        banners = [];
+                        workspaceModels = [];
+                        baseModels = [];
+                        models = [];
+                        initFailed = true;
+                }
+        };
 
-	onMount(async () => {
-		await init();
-	});
+        onMount(async () => {
+                await init();
+        });
 </script>
 
-{#if models !== null && taskConfig}
+{#if !initFailed && models !== null && taskConfig}
 	<form
 		class="flex flex-col h-full justify-between space-y-3 text-sm"
 		on:submit|preventDefault={() => {
@@ -731,9 +746,13 @@
 				{$i18n.t('Save')}
 			</button>
 		</div>
-	</form>
+        </form>
+{:else if initFailed}
+        <div class=" h-full w-full flex justify-center items-center text-sm">
+                {$i18n.t('Failed to load interface settings')}
+        </div>
 {:else}
-	<div class=" h-full w-full flex justify-center items-center">
-		<Spinner className="size-5" />
-	</div>
+        <div class=" h-full w-full flex justify-center items-center">
+                <Spinner className="size-5" />
+        </div>
 {/if}
