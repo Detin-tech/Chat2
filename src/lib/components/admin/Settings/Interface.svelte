@@ -428,7 +428,7 @@
                                                                 bind:value={taskConfig.VISION_ROUTER_MODEL}
                                                         >
                                                                 <option value="" selected>{$i18n.t('Select a model')}</option>
-                                                                {#each models as model}
+                                                                {#each models.filter((m) => m?.meta?.capabilities?.vision || m?.info?.meta?.capabilities?.vision || m?.capabilities?.vision) as model}
                                                                         <option value={model.id} class="bg-gray-100 dark:bg-gray-700">{model.name}</option>
                                                                 {/each}
                                                         </select>

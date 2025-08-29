@@ -833,7 +833,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     # Vision router inlet (placeholder)
     try:
-        form_data = await vision_router_inlet(request, form_data, user)
+        form_data = await vision_router_inlet(request, form_data, user, metadata)
     except Exception:
         pass
 
